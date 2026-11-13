@@ -244,7 +244,7 @@ uv run mypy src
 uv run pytest
 ```
 
-Pull requests run these checks on Python 3.11 through 3.14. Distributions are built by GitHub
+Pull requests run these checks once on Python 3.12. Distributions are built by GitHub
 Actions and published to PyPI from GitHub Releases using Trusted Publishing; maintainers do not
 store PyPI API tokens in GitHub.
 
