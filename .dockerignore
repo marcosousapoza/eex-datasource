@@ -1,0 +1,10 @@
+.venv
+__pycache__
+.pytest_cache
+.coverage
+dist
+build
+eex-archive
+*.db
+tests
+specs
