@@ -31,6 +31,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True, slots=True)
 class APIResponse:
+    """Decoded JSON plus exact response bytes and archival request metadata."""
+
     data: Any
     body: bytes
     url: str
@@ -46,6 +48,11 @@ class EEXClient:
     The client deliberately remains synchronous: the upstream allowance is one
     request per second per user, so concurrent calls provide no useful
     throughput and make accidental throttling easier.
+
+    ``access_token`` is an EEX Hub Bearer token. ``request_interval`` spaces
+    request starts (default 1.05 seconds); ``max_retries`` bounds transport,
+    HTTP 429, and HTTP 5xx retries. Use a context manager to release connections.
+    Endpoint contracts are the OpenAPI snapshots listed in ``specs/README.md``.
     """
 
     def __init__(
@@ -88,14 +95,21 @@ class EEXClient:
         self.close()
 
     def close(self) -> None:
+        """Release the underlying HTTP connection pool."""
         self._http.close()
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> Any:
+        """GET an API-relative path and return its decoded JSON body."""
         return self.get_response(path, params=params).data
 
     def get_response(
         self, path: str, params: dict[str, Any] | None = None
     ) -> APIResponse:
+        """GET JSON with pacing/retries, preserving response bytes for archiving.
+
+        Absent query values are omitted. Unsuccessful HTTP responses and
+        invalid JSON raise ``EEXAPIError`` or a more specific subclass.
+        """
         clean_params = {
             key: value for key, value in (params or {}).items() if value is not None
         }

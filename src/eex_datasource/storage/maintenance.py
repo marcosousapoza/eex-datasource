@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def verify_archive(session: Session, archive: Archive) -> tuple[int, int]:
+    """Return counts of checked and missing/hash-mismatched archive objects."""
     checked = 0
     invalid = 0
     for item in session.scalars(
@@ -33,6 +34,7 @@ def verify_archive(session: Session, archive: Archive) -> tuple[int, int]:
 
 
 def prune_archive(session: Session, archive: Archive, older_than: timedelta) -> int:
+    """Evict bodies older than a duration; commit metadata and return the count."""
     cutoff = datetime.now(UTC) - older_than
     count = 0
     for item in session.scalars(

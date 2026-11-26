@@ -1,0 +1,1884 @@
+openapi: '3.0.4'
+info:
+  title: Gas Spot API
+  version: '1.0.1'
+  description: |
+    The Gas Spot API provides comprehensive data on trading activities, reference information, top-of-book, end-of-day statistics, and settlement information for gas spot markets.
+    
+     To support a deeper understanding of the gas spot trading environment, users are encouraged to consult various sources provided by the European Energy Exchange (EEX):
+     - The <a href="https://www.eex.com/en/trading-resources/trading-information/rules-and-regulations#342" target="_blank">contract specifications.</a> define the tradable products, delivery periods, and trading conditions. These are part of the official EEX Rules and Regulations.
+     - The <a href="https://www.eex.com/en/trading-resources/trading-information/calendar" target="_blank">natural gas trading calendar</a>
+      outlines the operational days and schedules for gas spot trading.
+    
+     The EEX REST API is specified using the <a href="https://swagger.io/specification/v3/" target="_blank">OpenAPI standard</a>, which ensures a consistent and machine-readable definition of all endpoints and available data structures.
+    
+     **Previewing the endpoint results**
+     The API website provides a preview feature to test endpoints and display small sample responses (an API key must be entered via the "Authorize" button to execute a call). It is intended for testing and is not designed for displaying large datasets. Therefore, an example value of 10 has been set to limit responses.
+     These presets apply exclusively to the preview feature. Regular API calls can retrieve up to 60,000 rows per single request.
+    
+     <a href="/api-spec/gas_spot.yaml" target="_blank">Download of yaml file</a>
+
+  license:
+    name: Subscribe to EEX REST API
+    url: https://webshop.eex-group.com/eex-public-market-data?publication_frequency=53&commodity=9
+  
+  termsOfService: https://www.eex.com/en/market-data/eex-group-datasource/licensing-conditions
+  
+  contact:
+    name: EEX | Market Data Services
+    email: datasource@eex-group.com
+
+servers:
+  - url: https://api.eex-group.com/v2
+    description: Base URL
+
+security:
+  - bearerAuth: [ ]
+
+components:
+  
+  ### Schemas
+  
+  schemas:
+    ####
+    #### all fields
+    ####
+    
+    # key fields
+    
+    Cmdty:
+      description: Specifies the commodity associated with the contract. For the Gas Spot API, the only supported value is NATGAS.
+      type: string
+      example: NATGAS
+    
+    TrdDate:
+      description: |
+        Meaning of the TrdDate field:
+        - for reference, statistic, settlement data: effective gas market business date.
+        
+        - for trade data: Specifies the date on which the trade occurred according to the gas trade calendar.
+        
+        Details about the products can be found in the contract specifications and the natural gas calendar.
+      
+      
+      
+      
+      type: string
+      format: date
+      example: "2025-11-21"
+    
+    ShortCode:
+      description: |
+        ShortCode to identify a unique contract. It is based on the field Area and Product.
+      type: string
+      example: TTFDA
+    
+    LongName:
+      description: Official name of the EEX contract.
+      type: string
+      example: EEX TTF Natural Gas Day Spot
+    
+    # entitlement fields
+    
+    Area:
+      description: Defines the geographical market area to which a product is linked. For spread products, the two market areas are combined into a single identifier, e.g. ZTPTTF.
+      type: string
+      example: TTF
+    
+    ####
+    #### Reference Data
+    ####
+    
+    ReferenceData:
+      description: The reference information is used for publication of contract information.
+      type: object
+      properties:
+        TrdDate:
+          $ref: '#/components/schemas/TrdDate'
+        Area:
+          $ref: '#/components/schemas/Area'
+        ShortCode:
+          $ref: '#/components/schemas/ShortCode'
+        LongName:
+          $ref: '#/components/schemas/LongName'
+        Product:
+          description: |
+            Product of the contract.
+            Available tradeable products within EEX:
+            - Day Contracts: Day Ahead (DA), Saturday (SAT), Sunday (SUN), Bank Holiday (BH) and Individual Day (DAY)
+            - Hourly Contracts (HOURLY)
+            - Within Day Contracts (WD)
+            - Weekend Contracts (WE)
+          
+          type: string
+          format: string
+          example: DA
+        Cmdty:
+          $ref: '#/components/schemas/Cmdty'
+        StartTm:
+          description: The first eligible trading time for the instrument.
+          type: string
+          format: date-time
+          example: "2025-11-21T02:00:00Z"
+        EndTm:
+          description: The last eligible trading time for the instrument.
+          type: string
+          format: date-time
+          example: "2025-11-24T02:00:00Z"
+        DeliveryDay:
+          description: The day of the delivery.
+          type: string
+          format: date
+          example: "2025-11-24"
+        Start:
+          description: The first delivery time for the instrument.
+          type: string
+          format: date-time
+          example: "2025-11-24T05:00:00Z"
+        End:
+          description: The last delivery time for the instrument.
+          type: string
+          format: date-time
+          example: "2025-11-25T05:00:00Z"
+        DeliveryHours:
+          description: The amount of hours of the delivery.
+          type: integer
+          example: 24
+        UOM:
+          description: The unit of measure used for the product / instrument.
+          type: string
+          example: MW
+        Currency:
+          description: The currency used for the product / instrument.
+          type: string
+          example: EUR
+        ContractVol:
+          description: The contract volume of the instrument.
+          type: integer
+          example: 24
+      xml:
+        name: Reference
+    
+    ContractIdentifier:
+      description: Contract reference information used for endoints.
+      type: object
+      properties:
+        TrdDate:
+          $ref: '#/components/schemas/TrdDate'
+        Cmdty:
+          $ref: '#/components/schemas/Cmdty'
+        Area:
+          $ref: '#/components/schemas/Area'
+        ShortCode:
+          $ref: '#/components/schemas/ShortCode'
+        DeliveryDay:
+          description: The day of the delivery.
+          type: string
+          format: date
+          example: "2025-11-24"
+        UOM:
+          type: string
+          example: MW
+        Currency:
+          type: string
+          example: EUR
+    
+    ####
+    #### Trade data
+    ####
+    
+    Trade:
+      description: Gas-Spot Trade representation
+      allOf:
+        - $ref: '#/components/schemas/ContractIdentifier'
+        - type: object
+          properties:
+            ContractVol:
+              description: The contract volume of the instrument.
+              type: integer
+              example: 24
+            Tm:
+              description: The timestamp of the trade
+              type: string
+              format: date-time
+              example: "2025-11-21T08:09:17.442Z"
+            UpdtAct:
+              description: Specifies whether a trade is entered for the first time or deleted.
+              type: string
+              example: New
+            TrdID:
+              description: The TrdID is used to identify a unique trade.
+              type: integer
+              format: int64
+              example: 19550108
+            TrdVersion:
+              description: The trade version reflects the current state of a specific trade. Each UpdtAct applied to a unique trade increments the TrdVersion by one, ensuring a clear history of modifications.
+              type: string
+              example: 1
+            RelationshipID:
+              description: If a trade takes place as a result of the system automatically breaking a spread trade into its constituent legs, or if a trade is manually broken into its constituent legs by an administrator, the legs are assigned the same relationship ID so that it is easy to identify that they are related.
+              type: integer
+              format: int32
+              example: 2313078
+            GroupID:
+              description: Identifies a logical grouping of related trade records. Trades sharing the same GroupID are considered part of the same transaction set, such as multi-leg trades or updates to previously submitted trades.
+              type: integer
+              format: int32
+              example: 13715867
+            AgrsrAct:
+              description: Side of the incoming order that triggered the trade.
+              type: string
+              example: SELL
+            FromBrokenSpread:
+              description: Indicates whether the trade originated from a spread transaction that was subsequently broken and deleted. If the trade results from breaking a spread, this attribute is set to true. Otherwise, it is set to false.
+              type: boolean
+              example: false
+            Px:
+              description: The price at which the trade was executed.
+              type: number
+              format: double
+              example: 30.705
+            Sz:
+              description: The traded volume in lots.
+              type: number
+              format: double
+              example: 65.0
+            TrdVol:
+              description: The traded volume.
+              type: number
+              format: double
+              example: 1560.0
+            Start:
+              description: The first delivery time for the instrument.
+              type: string
+              format: date-time
+              example: "2025-11-24T05:00:00Z"
+            End:
+              description: The last delivery time for the instrument.
+              type: string
+              format: date-time
+              example: "2025-11-25T05:00:00Z"
+            DeliveryHours:
+              description: The amount of hours of the delivery.
+              type: integer
+              example: 24
+            LongName:
+              $ref: '#/components/schemas/LongName'
+      xml:
+        name: Trade
+    
+    ####
+    #### Top of Book data
+    ####
+    
+    TopOfBook:
+      description: Provides top of book information.
+      allOf:
+        - $ref: '#/components/schemas/ContractIdentifier'
+        - type: object
+          properties:
+            ContractVol:
+              description: The contract volume of the instrument.
+              type: integer
+              example: 24
+            Tm:
+              description: Timestamp indicating when the current top-of-book prices were last updated.
+              type: string
+              format: date-time
+              example: "2023-11-09T23:23:29.183Z"
+            BidPx:
+              description: Best bid price currently available in the market for a specified contract.
+              type: number
+              format: double
+              example: 30.66
+            BidSz:
+              description: The quantity of the best bid in lots.
+              type: number
+              format: double
+              example: 36
+            AskPx:
+              description: Best ask price currently available in the market for a specified contract.
+              type: number
+              format: double
+              example: 30.7
+            AskSz:
+              description: The quantity of the best ask in lots.
+              type: number
+              format: double
+              example: 50.0
+            Start:
+              description: The first delivery time for the instrument.
+              type: string
+              format: date-time
+              example: "2025-11-24T05:00:00Z"
+            End:
+              description: The last delivery time for the instrument.
+              type: string
+              format: date-time
+              example: "2025-11-25T05:00:00Z"
+            DeliveryHours:
+              description: The amount of hours of the delivery.
+              type: integer
+              example: 24
+            LongName:
+              $ref: '#/components/schemas/LongName'
+      xml:
+        name: TopOfBook
+    
+    ####
+    #### EOD statistic values
+    ####
+    
+    Statistic:
+      description: The Open, High, Low, Close price, volume and open interest statistics.
+      allOf:
+        - $ref: '#/components/schemas/ContractIdentifier'
+        - type: object
+          properties:
+            ContractVol:
+              description: The contract volume of the instrument.
+              type: integer
+              example: 24
+            OpenPx:
+              description: The opening price traded on a specified trading date.
+              type: number
+              format: double
+              example: 30.65
+            HighPx:
+              description: The highest price traded on a specified trading date.
+              type: number
+              format: double
+              example: 31.125
+            LowPx:
+              description: The lowest price traded on a specified trading date.
+              type: number
+              format: double
+              example: 30.185
+            LastPx:
+              description: The last price traded on a specified trading date.
+              type: number
+              format: double
+              example: 30.5
+            NumberOfTrd:
+              description: The number of trades for a specified contract on a specified trading date.
+              type: integer
+              example: 2167
+            TotTrdSz:
+              description: The traded quantity of the contract on the selceted trading day in lots.
+              type: number
+              format: double
+              example: 121553.0
+            TotTrdVol:
+              description: The traded volume of the contract on the selcted trading day.
+              type: number
+              format: double
+              example: 2917272.0
+            Start:
+              description: The first delivery time for the instrument.
+              type: string
+              format: date-time
+              example: "2025-11-24T05:00:00Z"
+            End:
+              description: The last delivery time for the instrument.
+              type: string
+              format: date-time
+              example: "2025-11-25T05:00:00Z"
+            DeliveryHours:
+              description: The amount of hours of the delivery.
+              type: integer
+              example: 24
+            LongName:
+              $ref: '#/components/schemas/LongName'
+      xml:
+        name: Statistic
+    
+    ####
+    #### Settlement values
+    ####
+    
+    Settlement:
+      description: Provides settlement prices for traded contracts on a specified trading day. These prices are published by the exchange and serve as reference values for clearing, margining, and valuation.
+
+      allOf:
+        - $ref: '#/components/schemas/ContractIdentifier'
+        - type: object
+          properties:
+            Px:
+              description: Provides settlement prices for traded contracts on a specified trading day.
+              type: number
+              format: double
+              example: 30.382
+            UpdtAct:
+              description: Flag indicating whether a settlement price has been corrected after initial publication.
+              type: string
+              example: New
+            Tm:
+              description: Timestamp of the last settlement price.
+              type: string
+              format: date-time
+              example: "2025-11-21T17:52:20Z"
+      xml:
+        name: Settlement
+    
+    ####
+    #### Responses
+    ####
+    
+    CmdtyResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Cmdty'
+      xml:
+        wrapped: true
+        name: Cmdtys
+
+    AreaResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Area'
+      xml:
+        wrapped: true
+        name: Areas
+
+    TrdDatesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/TrdDate'
+      xml:
+        wrapped: true
+        name: TrdDates
+    
+    ReferenceDatasResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ReferenceData'
+      xml:
+        wrapped: true
+        name: ReferenceDatas
+
+    ShortCodesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ShortCode'
+      xml:
+        wrapped: true
+        name: ShortCodes
+
+    TradesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Trade'
+      xml:
+        wrapped: true
+        name: Trades
+
+    TopOfBooksResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/TopOfBook'
+      xml:
+        wrapped: true
+        name: TopOfBooks
+    
+    StatisticsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Statistic'
+      xml:
+        wrapped: true
+        name: Statistics
+    
+    SettleResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Settlement'
+      xml:
+        wrapped: true
+        name: Settlements
+  
+  
+  #  headers:
+  
+  parameters:
+    Cmdty:
+      in: path
+      name: Cmdty
+      required: true
+      schema:
+        $ref: '#/components/schemas/Cmdty'
+    
+    TrdDate:
+      in: path
+      name: TrdDate
+      required: true
+      schema:
+        $ref: '#/components/schemas/TrdDate'
+    
+    Area:
+      in: path
+      name: Area
+      required: true
+      schema:
+        $ref: '#/components/schemas/Area'
+    
+    ShortCode:
+      in: path
+      name: ShortCode
+      required: true
+      schema:
+        $ref: '#/components/schemas/ShortCode'
+  
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  
+  responses:
+    BadRequest:
+      description: "Bad Request: The request contains invalid parameters or data."
+    
+    UnauthenticatedError:
+      description: "Unauthorised: Authentication failed. User needs to check the required permissions."
+    
+    ForbiddenError:
+      description: "Forbidden: Access denied. User does not possess the required permissions to access this resource."
+    
+    NotFoundError:
+      description: "Not Found: The requested resource could not be found. This may be due to a typo in the URL or an attempt to access a non-existent endpoint."
+    
+    RequestLimitReached:
+      description: "Access Denied: Number of requests has exceeded the defined limit."
+
+    InternalServerError:
+      description: "Internal Server Error: An unexpected server error occurred. Please try again later or contact support if the issue persists."
+    
+    ServiceUnavailableError:
+      description: "Service Unavailable: The requested service is temporarily unavailable. This could be due to server maintenance or high traffic. Please try again later."
+    
+    NotAcceptableError:
+      description: "The 'limit' parameter is invalid. Please ensure it is an integer between 1 and 60000."
+
+paths:
+
+  ####
+  #### reference data
+  ####
+  /rd/spot/:
+    description: All available commodities.
+    get:
+      summary: Returns all available commodities.
+      description: Returns all available commodities.
+      operationId: getRDCmdty
+      tags:
+        - ReferenceData spot
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CmdtyResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CmdtyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /rd/spot/{Cmdty}/:
+    description: All available areas.
+    get:
+      summary: Returns all areas for a specified commodity.
+      description: Returns all areas for a specified commodity.
+      operationId: getRDArea
+      tags:
+        - ReferenceData spot
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AreaResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AreaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /rd/spot/{Cmdty}/{Area}/:
+    description: All available trade dates
+    get:
+      summary: Returns all trade dates for a specified commodity and area.
+      description: Returns all trade dates for a specified commodity and area.
+      operationId: getRDDays
+      tags:
+        - ReferenceData spot
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrdDatesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TrdDatesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /rd/spot/{Cmdty}/{Area}/{TrdDate}:
+    get:
+      summary: Returns all contracts for a specified commodity, area and trade date.
+      description: Returns all contracts for a specified commodity, area and trade date.
+      operationId: getRDDay
+      tags:
+        - ReferenceData spot
+      parameters:
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferenceDatasResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ReferenceDatasResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /rd/spot/{Cmdty}/{Area}/{TrdDate}/:
+    get:
+      summary: Returns all short codes for a specified commodity, area and trade date.
+      description: Returns all short codes for a specified commodity, area and trade date.
+      operationId: getRDShortCodesDay
+      tags:
+        - ReferenceData spot
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortCodesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ShortCodesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /rd/spot/{Cmdty}/{Area}/{TrdDate}/{ShortCode}:
+    get:
+      summary: Returns all contracts for a specified trade date and short code.
+      description: Returns all contracts for a specified trade date and short code.
+      operationId: getRDProductDay
+      tags:
+        - ReferenceData spot
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferenceDatasResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ReferenceDatasResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  ####
+  #### trades
+  ####
+  
+  /trd/spot/{Cmdty}/{Area}/{TrdDate}:
+    get:
+      summary: Returns all trades for a specified commodity, area and trade date.
+      description: Returns all trades for a specified commodity, area and trade date.
+      operationId: getTRDDay
+      tags:
+        - Trades spot
+      parameters:
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+
+        - name: timeFrom
+          description: The start of the trade date range
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:00:29.183"
+
+        - name: timeTo
+          description: The end of the trade date range
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:05:29.183"
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /trd/spot/{Cmdty}/{Area}/{TrdDate}/{ShortCode}:
+    get:
+      summary: Returns all trades for specified area, trade date and short code.
+      description: Returns all trades for specified area, trade date and short code.
+      operationId: getTRDProductDay
+      tags:
+        - Trades spot
+      parameters:
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: timeFrom
+          description: The start of the trade date range
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:00:29.183"
+
+        - name: timeTo
+          description: The end of the trade date range
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:05:29.183"
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  # Time Series Trades
+  
+  /trds/spot/{Cmdty}/{Area}:
+    get:
+      summary: Returns all trades for a specified commodity and area on a defined trade series.
+      description: Returns all trades for a specified commodity and area on a defined trade series.
+      operationId: getTRD
+      tags:
+        - Trade series spot
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /trds/spot/{Cmdty}/{Area}/{ShortCode}:
+    get:
+      summary: Returns all trades for a specified commodity, area and short code on a defined trade series.
+      description: Returns all trades for a specified commodity, area and short code on a defined trade series.
+      operationId: getTRDProduct
+      tags:
+        - Trade series spot
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  ####
+  #### top of books
+  ####
+  
+  
+  /tob/spot/{Cmdty}/{Area}/{TrdDate}/{ShortCode}:
+    get:
+      summary: Returns the most recent top of the order book values for a specified area, trade date and short code.
+      description: |
+        Returns the most recent top of the order book values for a specified area, trade date and short code.
+          - Current TrdDate → Returns most recent TOB based on current time unless specified otherwise
+          - Historic TrdDate → Returns end of day TOB for a specified trade date unless specified otherwise
+      operationId: getTOBProductDay
+      tags:
+        - TopOfBook spot
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: timeTo
+          description: |
+            Optional parameter used to filter the response by a specific timestamp. When provided, the API returns only data that is valid up to the specified time.
+            
+            - Current TrdDate → Returns TOB valid at specified time for the current trade date
+            - Historic TrdDate → Returns TOB valid at specified time for a specified trade date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:05:29.183"
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopOfBook'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TopOfBook'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  # Time Series TopOfBooks
+  
+  
+  /tobs/spot/{Cmdty}/{Area}/{TrdDate}/{ShortCode}:
+    get:
+      summary: Returns the top-of-book history for a specified time series of a given trade date based on the defined commodity, market area and short code.
+      description: |
+        Returns the top-of-book history for a specified time series of a given trade date based on the defined commodity, market area and short code.
+        
+          - Current TrdDate → Returns all TOB changes between a specified start time and a specified (optional) end time on the current trade date.
+          - Historic TrdDate → Returns all TOB changes between a specified start time and a specified (optional) end time on a specified trade date.
+      
+      operationId: getTOBProduct
+      tags:
+        - TopOfBook series spot
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: timeFrom
+          description: |
+            Required parameter that defines the starting point of the time series for which top-of-book data is requested.
+            The API returns all relevant data from this timestamp onward, up to the optional timeTo value if provided.
+          in: query
+          required: true
+          schema:
+            type: string
+            format: time
+            example: "10:00:29.183"
+
+        - name: timeTo
+          description: |
+            Optional parameter that defines the end point of the time series for which top-of-book data is requested. When provided, the API returns only data that is valid up to the specified time.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:05:29.183"
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopOfBooksResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TopOfBooksResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  ####
+  #### EOD statistics
+  ####
+  
+  /stat/spot/{Cmdty}/{Area}/{TrdDate}:
+    get:
+      summary: Returns the Open, High, Low and Close (OHLC) statistics and open interest data for a specified commodity, area and trade date.
+      description: Returns the Open, High, Low and Close (OHLC) statistics and open interest data for a specified commodity, area and trade date.
+      operationId: getOHLCDay
+      tags:
+        - Statistics spot
+      parameters:
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /stat/spot/{Cmdty}/{Area}/{TrdDate}/{ShortCode}:
+    get:
+      summary: Returns the Open, High, Low and Close (OHLC) statistics and open interest data for a specified commodity, area, trade date and short code.
+      description: Returns the Open, High, Low and Close (OHLC) statistics and open interest data for a specified commodity, area, trade date and short code.
+      operationId: getOHLCProductDay
+      tags:
+        - Statistics spot
+      parameters:
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  # Time Series Statistics
+  
+  /stats/spot/{Cmdty}/{Area}:
+    get:
+      summary: Returns the Open, High, Low and Close (OHLC) statistics  and open interest data for  a specified commodity and area on a defined trade series.
+      description: Returns the Open, High, Low and Close (OHLC) statistics  and open interest data for  a specified commodity and area on a defined trade series.
+      operationId: getOHLCArea
+      tags:
+        - Statistics series spot
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /stats/spot/{Cmdty}/{Area}/{ShortCode}:
+    get:
+      summary: Returns the Open, High, Low and Close (OHLC) statistics  and open interest data for  a specified area and short code on a defined trade series.
+      description: Returns the Open, High, Low and Close (OHLC) statistics  and open interest data for  a specified area and short code on a defined trade series.
+      operationId: getOHLCProduct
+      tags:
+        - Statistics series spot
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  ####
+  #### Settlements
+  ####
+  
+  /spr/spot/{Cmdty}/{Area}/{TrdDate}:
+    get:
+      summary: Returns all settlement prices for a specified commodity and area on a defined trade date.
+      description: Returns all settlement prices for a specified commodity and area on a defined trade date.
+      operationId: getSettleDay
+      tags:
+        - Settlement spot
+      parameters:
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettleResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SettleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /spr/spot/{Cmdty}/{Area}/{TrdDate}/{ShortCode}:
+    get:
+      summary: Returns all settlement prices for a specified commodity, area and short code on a defined trade date.
+      description: Returns all settlement prices for a specified commodity, area and short code on a defined trade date.
+      operationId: getSettleDayProduct
+      tags:
+        - Settlement spot
+      parameters:
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettleResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SettleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  # Time Series Settlements
+  
+  /sprs/spot/{Cmdty}/{Area}:
+    get:
+      summary: Returns all settlement prices for a specified commodity and area on a defined trade series.
+      description: Returns all settlement prices for a specified commodity and area on a defined trade series.
+      operationId: getSettleArea
+      tags:
+        - Settlement series spot
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettleResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SettleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /sprs/spot/{Cmdty}/{Area}/{ShortCode}:
+    get:
+      summary: Returns all settlement prices for a specified commodity, area and short code on a defined trade series.
+      description: Returns all settlement prices for a specified commodity, area and short code on a defined trade series.
+      operationId: getSettleAreaProduct
+      tags:
+        - Settlement series spot
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettleResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SettleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'

@@ -26,6 +26,7 @@ class RateLimiter:
         self._lock = threading.Lock()
 
     def wait(self) -> None:
+        """Block until the next request start is allowed by the shared clock."""
         with self._lock:
             now = self._clock()
             if self._last_request is not None:

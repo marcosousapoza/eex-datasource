@@ -1,21 +1,20 @@
-"""Derivatives endpoints."""
+"""Derivatives endpoints from ``specs/derivatives.yaml``.
+
+Source: https://eds.eex-group.com/api-spec/derivatives.yaml
+"""
 
 from __future__ import annotations
 
 from typing import Any
 
-from .base import BaseAPI, segment
+from .base import segment
+from .market import MarketAPI
 
 
-class DerivativesAPI(BaseAPI):
-    def commodities(self) -> list[str]:
-        return self._get("/rd/derivatives/")
+class DerivativesAPI(MarketAPI):
+    """Discover and retrieve derivative contracts, trades, and prices."""
 
-    def areas(self, commodity: str) -> list[str]:
-        return self._get(f"/rd/derivatives/{segment(commodity)}/")
-
-    def trade_dates(self, commodity: str, area: str) -> list[str]:
-        return self._get(f"/rd/derivatives/{segment(commodity)}/{segment(area)}/")
+    market = "derivatives"
 
     def reference_data(
         self,
@@ -28,63 +27,31 @@ class DerivativesAPI(BaseAPI):
         limit: int = 60_000,
         **filters: Any,
     ) -> list[dict[str, Any]]:
-        path = (
-            f"/rd/derivatives/{segment(commodity)}/{segment(area)}/"
-            f"{segment(trade_date)}"
-        )
-        if shortcode is not None:
-            path += f"/{segment(shortcode)}"
-        if maturity is not None:
-            path += f"/{segment(maturity)}"
-        return self._get(path, limit=limit, **filters)
+        """Fetch ``/rd`` contract records, optionally scoped to a maturity.
 
-    def shortcodes(self, commodity: str, area: str, trade_date: str) -> list[str]:
-        return self._get(
-            f"/rd/derivatives/{segment(commodity)}/{segment(area)}/"
-            f"{segment(trade_date)}/"
+        ``maturity`` requires ``shortcode``. Extra filters use the query names
+        in the OpenAPI snapshot, such as ``productType`` and ``fields``.
+        ``limit`` is only sent to the unscoped daily route.
+        """
+        return self._day_resource(
+            "rd",
+            commodity,
+            area,
+            trade_date,
+            shortcode,
+            maturity,
+            limit=limit,
+            **filters,
         )
 
     def maturities(
         self, commodity: str, area: str, trade_date: str, shortcode: str
     ) -> list[int]:
+        """List maturities for a shortcode (the trailing-slash ``/rd`` route)."""
         return self._get(
             f"/rd/derivatives/{segment(commodity)}/{segment(area)}/"
             f"{segment(trade_date)}/{segment(shortcode)}/"
         )
-
-    def _day_resource(
-        self,
-        resource: str,
-        commodity: str,
-        area: str,
-        trade_date: str,
-        shortcode: str | None = None,
-        maturity: str | int | None = None,
-        *,
-        limit: int = 60_000,
-        **filters: Any,
-    ) -> list[dict[str, Any]]:
-        path = (
-            f"/{resource}/derivatives/{segment(commodity)}/{segment(area)}/"
-            f"{segment(trade_date)}"
-        )
-        if shortcode is not None:
-            path += f"/{segment(shortcode)}"
-        if maturity is not None:
-            path += f"/{segment(maturity)}"
-        return self._get(path, limit=limit, **filters)
-
-    def trades(self, *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
-        return self._day_resource("trd", *args, **kwargs)
-
-    def top_of_book(self, *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
-        return self._day_resource("tob", *args, **kwargs)
-
-    def statistics(self, *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
-        return self._day_resource("stat", *args, **kwargs)
-
-    def settlements(self, *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
-        return self._day_resource("spr", *args, **kwargs)
 
     def history(
         self,
@@ -99,20 +66,17 @@ class DerivativesAPI(BaseAPI):
         limit: int = 60_000,
         **filters: Any,
     ) -> list[dict[str, Any]]:
-        plural = {"trd": "trds", "stat": "stats", "spr": "sprs"}
-        if resource not in plural:
-            raise ValueError(
-                "resource must be 'trd', 'stat', or 'spr'; use "
-                "top_of_book_history() for order-book history"
-            )
-        path = f"/{plural[resource]}/derivatives/{segment(commodity)}/{segment(area)}"
-        if shortcode is not None:
-            path += f"/{segment(shortcode)}"
-        if maturity is not None:
-            path += f"/{segment(maturity)}"
-        return self._get(
-            path,
-            **{"from": date_from, "to": date_to, "limit": limit, **filters},
+        """Fetch a date range for ``trd``, ``stat``, or ``spr`` records."""
+        return self._history(
+            resource,
+            commodity,
+            area,
+            shortcode,
+            maturity,
+            date_from=date_from,
+            date_to=date_to,
+            limit=limit,
+            **filters,
         )
 
     def top_of_book_history(
@@ -129,6 +93,12 @@ class DerivativesAPI(BaseAPI):
         limit: int = 60_000,
         **filters: Any,
     ) -> list[dict[str, Any]]:
+        """Fetch every ``/tobs`` change using a symbol or shortcode/maturity.
+
+        ``time_from`` is required by OpenAPI; times are in market time.
+        """
+        if symbol is not None and (shortcode is not None or maturity is not None):
+            raise ValueError("provide symbol or shortcode/maturity, not both")
         if symbol is not None:
             path = (
                 f"/tobs/derivatives/{segment(commodity)}/{segment(area)}/"
@@ -149,19 +119,3 @@ class DerivativesAPI(BaseAPI):
             limit=limit,
             **filters,
         )
-
-    def market_day(
-        self,
-        commodity: str,
-        area: str,
-        trade_date: str,
-        *,
-        limit: int = 60_000,
-    ) -> dict[str, Any]:
-        return {
-            "reference": self.reference_data(commodity, area, trade_date, limit=limit),
-            "trades": self.trades(commodity, area, trade_date, limit=limit),
-            "top_of_book": self.top_of_book(commodity, area, trade_date, limit=limit),
-            "statistics": self.statistics(commodity, area, trade_date, limit=limit),
-            "settlements": self.settlements(commodity, area, trade_date, limit=limit),
-        }

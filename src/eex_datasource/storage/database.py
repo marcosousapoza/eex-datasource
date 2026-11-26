@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 
 def create_database_engine(url: str, *, echo: bool = False) -> Engine:
+    """Create an engine, enabling SQLite foreign keys and WAL where applicable."""
     kwargs: dict[str, object] = {"echo": echo, "pool_pre_ping": True}
     if url.startswith("sqlite"):
         kwargs["connect_args"] = {"check_same_thread": False}
@@ -24,4 +25,5 @@ def _configure_sqlite(dbapi_connection: object, _: object) -> None:
 
 
 def session_factory(engine: Engine) -> sessionmaker[Session]:
+    """Create sessions whose loaded objects remain usable after commit."""
     return sessionmaker(engine, expire_on_commit=False)

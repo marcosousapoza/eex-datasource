@@ -1,0 +1,591 @@
+openapi: '3.0.4'
+info:
+  title: Index API
+  version: '1.0.1'
+  description: |
+    The Index Data API provides access to officially published index values from the European Energy Exchange. These indexes serve as transparent price references for several markets. EEX publishes these values, in order to ensure price transparency and facilitate risk management.
+
+    The EEX REST API is specified using the <a href="https://swagger.io/specification/v3/" target="_blank">OpenAPI standard</a>, which ensures a consistent and machine-readable definition of all endpoints and available data structures.
+
+    **Previewing the endpoint results**
+    The API website provides a preview feature to test endpoints and display small sample responses (an API key must be entered via the "Authorize" button to execute a call). It is intended for testing and is not designed for displaying large datasets. Therefore, an example value of 10 has been set to limit responses.
+    These presets apply exclusively to the preview feature. Regular API calls can retrieve up to 60,000 rows per single request.
+
+    <a href="/api-spec/index.yaml" target="_blank">Download of yaml file</a>
+    
+  license:
+    name: Subscribe to EEX REST API
+    url: https://webshop.eex-group.com/eex-public-market-data?time_interval=29&publication_frequency=53
+    
+  termsOfService: https://www.eex.com/en/market-data/eex-group-datasource/licensing-conditions
+  
+  contact:
+    name: EEX | Market Data Services
+    email: datasource@eex-group.com
+  
+servers:
+  - url: https://api.eex-group.com/v2
+    description: Base URL
+
+security:
+  - bearerAuth: []
+
+paths:
+  /idx/:
+    description: All available commodities.
+    get:
+      summary: Returns all available commodities.
+      description: Returns all valid commodities.
+      operationId: getIndexesCmdty
+      tags:
+        - Indexes
+      responses:
+        '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/CmdtyResponse'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/CmdtyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+
+  /idx/{Cmdty}/:
+    description: All available areas.
+    get:
+      summary: Returns all areas for a specified commodity.
+      description: Returns all valid areas for a specified commodity.
+      operationId: getIndexesArea
+      tags:
+        - Indexes
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+      responses:
+        '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/AreaResponse'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/AreaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /idx/{Cmdty}/{Area}/:
+    description: All available indexes.
+    get:
+      summary: Returns all valid indexes for a specified commodity and area.
+      description: Returns all valid indexes for a specified commodity and area.
+      operationId: getIndexesIndex
+      tags:
+        - Indexes
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+      responses:
+        '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/IndexResponse'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/IndexResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /idx/{Cmdty}/{Area}/{Index}/:
+    description: All available trade dates.
+    get:
+      summary: Returns all trade dates for a specified commodity, area and index.
+      description: Returns all trade dates for a specified commodity, area and index.
+      operationId: getIndexesDates
+      tags:
+        - Indexes
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/Index'
+      responses:
+        '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/TrdDateResponse'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/TrdDateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /idx/{Cmdty}/{Area}/{Index}/{TrdDate}:
+    get:
+      description: Returns all index values for a specified commodity, area, index and trade date.
+      summary: Returns all index values for a specified commodity, area, index and trade date.
+      operationId: getIndexesDay
+      tags:
+        - Indexes
+      parameters:
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/Index'
+        
+        - name: deliveryDay
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2025-11-22"
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+        
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndexesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/IndexesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  
+  # index series for a specific index
+  
+  /idxs/{Cmdty}/{Area}/{Index}:
+    get:
+      summary: Returns all index values for a specified commodity, area and index on a defined trade series.
+      description: Returns all index values for a specified commodity, area and index on a defined trade series.
+      operationId: getIndexSeries
+      tags:
+        - Index series
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/Index'
+
+        - name: deliveryDay
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2025-11-21"
+        
+        - name: from
+          in: query
+          description: The start of the trade date range
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+        
+        - name: to
+          in: query
+          description: The end of the trade date range
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+        
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+        
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndexArrayResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/IndexArrayResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+components:
+  
+  ### Schemas
+  
+  schemas:
+    
+    # entitlement fields
+    
+    Cmdty:
+      description: |
+        The Cmdty of the index.
+      type: string
+      example: NATGAS
+    
+    Area:
+      description: |
+        The geographical (market) area an index is referring to.
+      type: string
+      example: THE
+    
+    Index:
+      description: |
+        The code to identify an index.
+      type: string
+      example: EGSI_D
+    
+    TrdDate:
+      description: |
+        Specifies the trade date for which index data is requested.
+      type: string
+      format: date
+      example: "2025-11-21"
+
+    ####
+    #### Reference Data
+    ####
+    
+    IndexIdentifier:
+      description: index reference information used for endpoints.
+      type: object
+      properties:
+        Cmdty:
+          $ref: '#/components/schemas/Cmdty'
+        Area:
+          $ref: '#/components/schemas/Area'
+        Index:
+          $ref: '#/components/schemas/Index'
+        LongName:
+          description: Official index name.
+          type: string
+          example: EEX EGSI THE Day
+        DeliveryDay:
+          description: The day of the delivery
+          type: string
+          format: date
+          example: "2025-11-22"
+        Start:
+          description: The first delivery time for the instrument.
+          type: string
+          format: date-time
+          example: "2025-11-22T05:00:00Z"
+        End:
+          description: The last delivery time for the instrument.
+          type: string
+          format: date-time
+          example: "2025-11-23T05:00:00Z"
+        UOM:
+          description: The unit of measure used for the instrument.
+          type: string
+          example: MWh
+        Currency:
+          description: The unit of measure used for the instrument.
+          type: string
+          example: EUR
+    
+    ####
+    #### Index data
+    ####
+    
+    IndexData:
+      description: Index content
+      type: object
+      properties:
+        TrdDate:
+          $ref: '#/components/schemas/TrdDate'
+        Tm:
+          description: |
+            Timestamp indicating when the index value was calculated or last updated.
+          type: string
+          format: date-time
+          example: "2025-11-21T17:05:02Z"
+        UpdtAct:
+          description: |
+            Indicates whether the index value has been corrected after its initial calculation.
+          type: string
+          example: New
+        Px:
+          description: The index value.
+          type: number
+          format: double
+          example: 32.064
+        Vol:
+          description: |
+           Traded volume. This field is currently not included in any API response and is reserved for potential future use. It may be utilized if scenarios arise where volume data is relevant, for example, for indices that provide volume information only.
+
+          type: number
+          format: double
+          example: null
+        BOMcode:
+          description: Balancing of the month code. Only available for specific indexes.
+          type: string
+          example:
+        SecurityAltID:
+          description: Unqiue key to identify instruments between T7 and C7. Only available for specific indexes.
+          type: integer
+          format: int64
+          example: null
+          
+      xml:
+        name: Tick
+
+    IndexFull:
+      description: Index content
+      allOf:
+        - $ref: '#/components/schemas/IndexIdentifier'
+        - $ref: '#/components/schemas/IndexData'
+      xml:
+        name: Index
+    
+    IndexArrayItem:
+      allOf:
+        - $ref: '#/components/schemas/IndexIdentifier'
+        
+        - type: object
+          properties:
+            Ticks:
+              type: array
+              items:
+                $ref: '#/components/schemas/IndexData'
+      xml:
+        wrapped: true
+        name: Index
+    
+    ####
+    #### Responses
+    ####
+    
+    CmdtyResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Cmdty'
+      xml:
+        wrapped: true
+        name: Cmdtys
+
+    AreaResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Area'
+      xml:
+        wrapped: true
+        name: Areas
+
+    TrdDateResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/TrdDate'
+      xml:
+        wrapped: true
+        name: TrdDates
+
+    IndexResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Index'
+      xml:
+        wrapped: true
+        name: Index
+
+    IndexesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/IndexFull'
+      xml:
+        wrapped: true
+        name: Indexes
+    
+    IndexArrayResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/IndexArrayItem'
+      xml:
+        wrapped: true
+        name: Indexes
+      
+
+#  headers:
+  
+  parameters:
+    Cmdty:
+      in: path
+      name: Cmdty
+      required: true
+      schema:
+        $ref: '#/components/schemas/Cmdty'
+    
+    TrdDate:
+      in: path
+      name: TrdDate
+      required: true
+      schema:
+        $ref: '#/components/schemas/TrdDate'
+    
+    Area:
+      in: path
+      name: Area
+      required: true
+      schema:
+        $ref: '#/components/schemas/Area'
+    
+    Index:
+      in: path
+      name: Index
+      required: true
+      schema:
+        $ref: '#/components/schemas/Index'
+    
+    
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  
+  responses:
+    BadRequest:
+      description: "Bad Request: The request contains invalid parameters or data."
+
+    UnauthenticatedError:
+      description: "Unauthorised: Authentication failed. User needs to check the required permissions."
+
+    ForbiddenError:
+      description: "Forbidden: Access denied. User does not possess the required permissions to access this resource."
+
+    NotFoundError:
+      description: "Not Found: The requested resource could not be found. This may be due to a typo in the URL or an attempt to access a non-existent endpoint."
+
+    RequestLimitReached:
+      description: "Access Denied: Number of requests has exceeded the defined limit."
+
+    InternalServerError:
+      description: "Internal Server Error: An unexpected server error occurred. Please try again later or contact support if the issue persists."
+
+    ServiceUnavailableError:
+      description: "Service Unavailable: The requested service is temporarily unavailable. This could be due to server maintenance or high traffic. Please try again later."
+    
+    NotAcceptableError:
+      description: "The 'limit' parameter is invalid. Please ensure it is an integer between 1 and 60000."
+

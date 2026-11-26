@@ -21,6 +21,3 @@ eex-archive/
 htmlcov/
 .pytest_cache/
 .ruff_cache/
-
-# Downloaded API specification snapshots
-specs/*.yaml

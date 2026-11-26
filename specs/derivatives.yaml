@@ -1,0 +1,3497 @@
+openapi: '3.0.4'
+info:
+  title: Derivatives API
+  version: '1.0.1'
+  description: |
+    The Derivatives API provides comprehensive data on trading activities, reference information, top-of-book, end-of-day statistics, and settlement information for derivative markets.
+    
+     To support a deeper understanding of the derivatives trading environment, users are encouraged to consult various sources provided by the European Energy Exchange (EEX):
+     - The <a href="https://www.eex.com/en/trading-resources/trading-information/rules-and-regulations#342" target="_blank">contract specifications</a> define the tradable products, delivery periods, and trading conditions. These are part of the official EEX Rules and Regulations.
+     - The <a href="https://www.eex.com/en/trading-resources/trading-information/calendar" target="_blank">EEX Holiday Calendar for Emissions Spot & Derivatives</a>
+      outlines the operational days and schedules for derivatives and emissions spot trading.
+    
+    
+     The EEX REST API is specified using the <a href="https://swagger.io/specification/v3/" target="_blank">OpenAPI standard</a>, which ensures a consistent and machine-readable definition of all endpoints and available data structures.
+    
+     **Previewing the endpoint results**
+     The API website provides a preview feature to test endpoints and display small sample responses (an API key must be entered via the "Authorize" button to execute a call). It is intended for testing and is not designed for displaying large datasets. Therefore, an example value of 10 has been set to limit responses.
+     These presets apply exclusively to the preview feature. Regular API calls can retrieve up to 60,000 rows per single request.
+    
+    <a href="/api-spec/derivatives.yaml" target="_blank">Download of yaml file</a>
+
+  license:
+    name: Subscribe to EEX REST API
+    url: https://webshop.eex-group.com/eex-public-market-data?transmission_medium=197&publication_frequency=53
+
+  termsOfService: https://www.eex.com/en/market-data/eex-group-datasource/licensing-conditions
+  
+  contact:
+    name: EEX | Market Data Services
+    email: datasource@eex-group.com
+
+
+servers:
+  - url: https://api.eex-group.com/v2
+    description: Base URL
+
+security:
+  - bearerAuth: [ ]
+
+components:
+  schemas:
+    # key fields
+    
+    ShortCode:
+      description: Code identifying a unique contract.
+      type: string
+      example: DEBM
+
+    Symbol:
+      description: Rolling Symbol
+      type: string
+      example: DEBM+1
+    
+    ProductISIN:
+      description: The unique 12-character code of the product.
+      type: string
+      example: DE000A2DB1F4
+    
+    ExpiryDate:
+      description: Expiration day of the instrument.
+      type: string
+      format: date
+      example: "2025-12-30"
+    
+    Maturity:
+      description: Expiration month of the instrument.
+      type: integer
+      example: 202512
+    
+    DisplayName:
+      description: |
+        Name of the instrument in combination with the maturity.
+        The field DisplayName is available starting from November 2021.
+      type: string
+      example: DEBM DEC25
+    
+    InstrumentType:
+      description: The type of the instrument.
+      type: string
+      example: Simple Instrument
+    
+    TrdDate:
+      description: |
+        for reference, statistic, settlement data: effective business date.
+        for trade data: Specifies the date on which the trade occurred.
+      type: string
+      format: date
+      example: "2025-11-21"
+    
+    Currency:
+      description: The currency used for the product / instrument.
+      type: string
+      example: EUR
+    
+    UOM:
+      description: The unit of measure used for the product / instrument.
+      type: string
+      example: MWh
+
+    LongName:
+      description: Official contract name of the instrument.
+      type: string
+      example: EEX German Power Base Month Future
+
+    InstrumentISIN:
+      description: The ISIN of the instrument.
+      type: string
+      example: DE000C29ZTL4
+    
+    # entitlement fields
+    
+    Area:
+      description: The geographical (market) area a product is referring to. Since Freight products don’t have a specific area, the area ‘FREIGHT’ should be used.
+      type: string
+      example: DE
+    
+    Cmdty:
+      description: The commodity of the contract.
+      type: string
+      example: POWER
+
+    ProductType:
+      description: |
+        Specifies whether the instrument is an option, a future or a spot product. Possible values:
+          - Option
+          - Future
+          - Spot
+      type: string
+      example: Future
+    
+    StrikePx:
+      description: |
+        The strike price of an option.
+        Will be set if ProductType is 'Option'.
+      type: number
+      format: double
+      example:
+    
+    OptionType:
+      description: |
+        Indicates whether the option is a put or call.
+        Will be set if ProductType is 'Option'.
+      type: string
+      example:
+    
+    Leg:
+      description: |
+        The reference data of an individual spread leg.
+      type: object
+      example:
+      properties:
+        ShortCode:
+          $ref: '#/components/schemas/ShortCode'
+        Cmdty:
+          $ref: '#/components/schemas/Cmdty'
+        Area:
+          $ref: '#/components/schemas/Area'
+        Maturity:
+          $ref: '#/components/schemas/Maturity'
+    
+    # data structures
+    
+    ReferenceData:
+      description: The reference information is used for publication of contract information.
+      type: object
+      properties:
+        TrdDate:
+          $ref: '#/components/schemas/TrdDate'
+        ShortCode:
+          $ref: '#/components/schemas/ShortCode'
+        LongName:
+          $ref: '#/components/schemas/LongName'
+        ProductISIN:
+          $ref: '#/components/schemas/ProductISIN'
+        Area:
+          $ref: '#/components/schemas/Area'
+        Cmdty:
+          $ref: '#/components/schemas/Cmdty'
+        MIC:
+          description: The Market Identifier Code of the trading product.
+          type: string
+          example: XEEE
+        Currency:
+          $ref: '#/components/schemas/Currency'
+        UOM:
+          $ref: '#/components/schemas/UOM'
+        DisplayName:
+          $ref: '#/components/schemas/DisplayName'
+        InstrumentISIN:
+          $ref: '#/components/schemas/InstrumentISIN'
+        ProductType:
+          $ref: '#/components/schemas/ProductType'
+        InstrumentType:
+          $ref: '#/components/schemas/InstrumentType'
+        ExpiryDate:
+          $ref: '#/components/schemas/ExpiryDate'
+        ContractDate:
+          description: Date used to identify the instrument.
+          type: string
+          format: date
+          example: "2025-12-01"
+        ContractDateType:
+          description: |
+            Indicates whether the type of the ContractDate is DeliveryStart or ExpiryDate.
+            The field ContractDateType is available starting from November 2022.
+          type: string
+          example: DeliveryStart
+        Maturity:
+          $ref: '#/components/schemas/Maturity'
+        MaturityType:
+          description: The type of maturity of the instrument.
+          type: string
+          example: Month
+        DisplayDay:
+          description: |
+            The day of the month referred to by the instrument.
+            Will be set if MaturityType is 'Date'.
+            The field DisplayDay is available starting from November 2021.
+          type: integer
+          example:
+        DisplayWeek:
+          description: |
+            The week of the year referred to by the instrument.
+            Will be set if MaturityType is 'Week'.
+            The field DisplayWeek is available starting from November 2021.
+          type: integer
+          example:
+        DisplayMonth:
+          description: |
+            The month of the year referred to by the instrument.
+            Will be set if MaturityType is 'Month'.
+            The field DisplayMonth is available starting from November 2021.
+          type: integer
+          example: 12
+        DisplayQuarter:
+          description: |
+            The Display Quarter denotes the three-month period inside a year (1, ..., 4), to which a quarterly instrument refers to.
+            Will be set if MaturityType is 'Quarter'.
+            The field DisplayQuarter is available starting from November 2021.
+          type: integer
+          example:
+        DisplaySeason:
+          description: |
+            The season of the year referred to by the instrument.
+            Will be set if MaturityType is 'Season'.
+            The field DisplaySeason is available starting from November 2021.
+          type: string
+          example:
+        DisplayYear:
+          description: |
+            The year referred to by the instrument. This field is always set.
+            The field DisplayMonth is available starting from November 2021.
+          type: integer
+          example: 2025
+        ContractVol:
+          description: The contract volume of the instrument.
+          type: integer
+          example: 744
+        ReportingMarket:
+          description: The segment MIC of EEX used for the trading product.
+          type: string
+          example: XEER
+        StartDate:
+          description: The first eligible day of trading for the instrument.
+          type: string
+          format: date
+          example: "2025-02-28"
+        EndDate:
+          description: The last eligible day of trading for the instrument.
+          type: string
+          format: date
+          example: "2025-12-30"
+        Start:
+          description: The first delivery day for the instrument.
+          type: string
+          format: date
+          example: "2025-12-01"
+        End:
+          description: The last delivery day for the instrument.
+          type: string
+          format: date
+          example: "2025-12-31"
+        SettlDate:
+          description: The date of the final settlement for the instrument.
+          type: string
+          format: date
+          example: "2025-12-30"
+        InstrumentStatus:
+          description: The current status of the instrument in the trading system.
+          type: string
+          example: Active
+        UnderlyingInstrumentISIN:
+          description: |
+            The ISIN for the underlying instrument.
+            Will be set if ProductType is 'Option'.
+          type: string
+          example:
+        StrikePx:
+          $ref: '#/components/schemas/StrikePx'
+        OptionType:
+          $ref: '#/components/schemas/OptionType'
+        ExerciseStyle:
+          description: |
+            The exercise style of an option.
+            Will be set if ProductType is 'Option'.
+          example: null
+        ValuationMethod:
+          description: The valuation method used for the instrument.
+          type: string
+          example: Future
+        SettlMethod:
+          description: The settlement type used for an instrument.
+          type: string
+          example: Cash
+        SettlSubMethod:
+          description: |
+            The settlement subtype used for an instrument.
+            Will be set if SettlMethod is 'Physical'.
+            
+            Cascade: for all futures with maturity type quarter or longer
+            
+            Derivatives: for all options
+            
+            Energy: for all physical natgas futures with maturity type month or shorter
+            
+            Other: for certificates
+          type: string
+          example:
+        UnderlyingMaturityType:
+          description: |
+            The type of maturity for the underlying instrument.
+            Will be set if ProductType is 'Option'.
+          type: string
+          example:
+        Legs:
+          description: |
+            The reference data of the legs of a spread.
+            Will be set if InstrumentType is 'Futures Spread' or 'Inter-Product Spread'.
+          type: array
+          items:
+            $ref: '#/components/schemas/Leg'
+          xml:
+            wrapped: true
+
+    ContractIdentifier:
+      description: Contract reference information used for END points.
+      type: object
+      properties:
+        ShortCode:
+          $ref: '#/components/schemas/ShortCode'
+        ProductISIN:
+          $ref: '#/components/schemas/ProductISIN'
+        Area:
+          $ref: '#/components/schemas/Area'
+        Cmdty:
+          $ref: '#/components/schemas/Cmdty'
+        ExpiryDate:
+          $ref: '#/components/schemas/ExpiryDate'
+        Maturity:
+          $ref: '#/components/schemas/Maturity'
+        DisplayName:
+          $ref: '#/components/schemas/DisplayName'
+        InstrumentISIN:
+          $ref: '#/components/schemas/InstrumentISIN'
+        InstrumentType:
+          $ref: '#/components/schemas/InstrumentType'
+        TrdDate:
+          $ref: '#/components/schemas/TrdDate'
+        Currency:
+          $ref: '#/components/schemas/Currency'
+        UOM:
+          $ref: '#/components/schemas/UOM'
+        StrikePx:
+          $ref: '#/components/schemas/StrikePx'
+        OptionType:
+          $ref: '#/components/schemas/OptionType'
+    
+    Trade:
+      description: Provides trade data.
+      allOf:
+        - $ref: '#/components/schemas/ContractIdentifier'
+        - type: object
+          properties:
+            ProductType:
+              $ref: '#/components/schemas/ProductType'
+            TrdType:
+              description: |
+                Indicates whether the trades relates to a exchange trade or trade registration.
+              type: string
+              example: Exchange
+            UpdtAct:
+              description: |
+                Specifies whether a trade is entered for the first time or deleted.
+              type: string
+              example: New
+            AgrsrAct:
+              description: |
+                Side of the incoming order that triggered the trade.
+                For trades that are part of a spread or other multi-leg strategies, this field may not be populated. In such cases, the trading system (T7) does not provide aggressor-specific details. Additionally, when orders are entered outside active trading hours the AgrsrAct is not provided, and the field remains empty.
+              type: string
+              example: SELL
+            TrdID:
+              description: |
+                The TrdID field in combination with the TrdType are used to identify a unique trade. Each business day, the TrdID is reset, beginning again at 1 for both 'Exchange' and 'Trade Registration' trades.
+              type: integer
+              format: int64
+              example: 3
+            Px:
+              description: The price at which the trade was executed.
+              type: number
+              format: double
+              example: 99.02
+            Sz:
+              description: The traded quantity in lots.
+              type: integer
+              format: int64
+              example: 1
+            TrdVol:
+              description: The traded volume.
+              type: number
+              format: double
+              example: 744
+            Tm:
+              description: The timestamp of the trade
+              type: string
+              format: date-time
+              example: "2025-07-21T06:05:17.107781Z"
+            OTCTm:
+              description: The time of commencement of off-book trades.
+              type: string
+              format: date-time
+              example: "2025-07-21T06:05:17.107781Z"
+            FromBrokenSpread:
+              description: Indicates if the trade originates from a broken spread trade.
+              type: boolean
+              example: false
+            VolumeOnly:
+              description: |
+                Indicates whether the trade is expected to be provided without a price.
+                If the trade qualifies as VolumeOnly, the field is set to "true".
+                Otherwise, the field is not included in the message.
+              type: boolean
+              example:
+            Legs:
+              description: The reference data of the leg instruments of a spread.
+              type: array
+              items:
+                $ref: '#/components/schemas/Leg'
+              xml:
+                wrapped: true
+          required:
+            - TrdID
+    
+    # Statistic
+    
+    Statistic:
+      description: Provides end-of-day statistics.
+      allOf:
+        - $ref: '#/components/schemas/ContractIdentifier'
+        - type: object
+          properties:
+            ProductType:
+              $ref: '#/components/schemas/ProductType'
+            OpenPx:
+              description: The opening price traded on a specified trading date. Both trade types, Exchange and Trade Registration are taken into account for this field.
+              type: number
+              format: double
+              example: 99.02
+            HighPx:
+              description: The highest price traded on a specified trading date. Both trade types, Exchange and Trade Registration are taken into account for this field.
+              type: number
+              format: double
+              example: 99.7
+            LowPx:
+              description: The lowest price traded on a specified trading date. Both trade types, Exchange and Trade Registration are taken into account for this field.
+              type: number
+              format: double
+              example: 89.95
+            LastPx:
+              description: The last price traded on a specified trading date. Both trade types, Exchange and Trade Registration are taken into account for this field.
+              type: number
+              format: double
+              example: 98.54
+            NumberOfTrd:
+              description: The number of trades for a specified contract on a specified trading date.
+              type: integer
+              example: 4441
+            NumberOfTrdEx:
+              description: The number of exchange trades for a specified contract on a specified trading date.
+              type: integer
+              example: 3686
+            NumberOfTrdOTC:
+              description: The number of trade registrations for a specified contract on a specified trading date.
+              type: integer
+              example: 755
+            TotTrdSz:
+              description: The lots traded for a specified contract on a specified trading date.
+              type: number
+              format: double
+              example: 7208.0
+            TotTrdVol:
+              description: The volume traded for a specified contract on a specified trading date.
+              type: number
+              format: double
+              example: 5362752.0
+            TotTrdSzEx:
+              description: The lots traded on exchange for a specified contract on a specified trading date.
+              type: number
+              format: double
+              example: 4648.0
+
+            TotTrdVolEx:
+              description: The volume traded on exchange for a specified contract on a specified trading date.
+              type: number
+              format: double
+              example: 3458112.0
+
+            TotTrdSzOTC:
+              description: The lots for trade registrations  for a specified contract on a specified trading date.
+              type: number
+              format: double
+              example: 2560.0
+            TotTrdVolOTC:
+              description: The trade registration volume for a specified contract on a specified trading date.
+              type: number
+              format: double
+              example: 1904640.0
+            GrossOpenIntSz:
+              description: The gross open interest lots for a specified contract on a speciied trading date.
+              type: integer
+              example: 289632
+            GrossOpenIntVol:
+              description: The gross open interest volume for a specified contract on a specified trading date.
+              type: integer
+              format: int64
+              example: 215486208
+            NetOpenIntSz:
+              description: The net open interest lots for a specified contract on a speciied trading date.
+              type: integer
+              example: 212764
+            NetOpenIntVol:
+              description: The net open interest volume for a specified contract on a specified trading date.
+              type: integer
+              format: int64
+              example: 158296416
+            Legs:
+              description: |
+                The reference data of the legs of a spread.
+              type: array
+              items:
+                $ref: '#/components/schemas/Leg'
+              xml:
+                wrapped: true
+      xml:
+        name: Statistic
+    
+    # Settlement Data
+    
+    Settlement:
+      description: Provides end-of-day settlement prices.
+      allOf:
+        - $ref: '#/components/schemas/ContractIdentifier'
+        - type: object
+          properties:
+            ProductType:
+              $ref: '#/components/schemas/ProductType'
+            Px:
+              description: The daily settlement price for the contract.
+              type: number
+              format: double
+              example: 98.26
+            UpdtAct:
+              description: |
+                Specifies whether a settlement price is entered or changed:
+                - New
+                - Change
+              type: string
+              example: New
+            Tm:
+              description: Timestamp of the last settlement price correction.
+              type: string
+              format: date-time
+              example: "2025-11-21T17:48:49Z"
+      xml:
+        name: Settlement
+    
+    # Top of Book Data
+    
+    TopOfBook:
+      description: Provides top of book information.
+      allOf:
+        - $ref: '#/components/schemas/ContractIdentifier'
+        - type: object
+          properties:
+            Tm:
+              description: Timestamp indicating when the current top-of-book prices were last updated.
+              type: string
+              format: date-time
+              example: "2025-11-21T14:23:27.989106Z"
+            BidPx:
+              description: Best bid price currently available in the market for a specified contract.
+              type: number
+              format: double
+              example: 98.57
+            BidSz:
+              description: The quantity of the best bid in lots.
+              type: number
+              format: double
+              example: 2.0
+            BidVol:
+              description: The volume of the best bid.
+              type: integer
+              format: int64
+              example: 1488
+            BidType:
+              description: Defines whether the best bid is explicit or implied.
+              type: string
+              example: EXPLICIT
+            AskPx:
+              description: Best ask price currently available in the market for a specified contract.
+              type: number
+              format: double
+              example: 98.67
+            AskSz:
+              description: The quantity of the best ask in lots.
+              type: number
+              format: double
+              example: 3.0
+            AskVol:
+              description: The volume of the best ask.
+              type: integer
+              format: int64
+              example: 2232
+            AskType:
+              description: Defines whether the best ask is explicit or implied.
+              type: string
+              example: EXPLICIT
+            Legs:
+              description: |
+                The reference data of the legs of a spread.
+              type: array
+              items:
+                $ref: '#/components/schemas/Leg'
+              xml:
+                wrapped: true
+      xml:
+        name: TopOfBook
+    
+    # Responses
+    
+    ReferenceDatasResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ReferenceData'
+      xml:
+        wrapped: true
+        name: ReferenceDatas
+    
+    TrdDatesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/TrdDate'
+      xml:
+        wrapped: true
+        name: TrdDates
+    
+    CmdtyResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Cmdty'
+      xml:
+        wrapped: true
+        name: Cmdty
+
+    AreaResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Area'
+      xml:
+        wrapped: true
+        name: Area
+
+    ShortCodesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ShortCode'
+      xml:
+        wrapped: true
+        name: ShortCodes
+    
+    MaturitiesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Maturity'
+      xml:
+        wrapped: true
+        name: Maturities
+    
+    TradesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Trade'
+      xml:
+        wrapped: true
+        name: Trades
+    
+    StatisticsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Statistic'
+      xml:
+        wrapped: true
+        name: Statistics
+    
+    SettlementsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Settlement'
+      xml:
+        wrapped: true
+        name: Settlements
+    
+    TopOfBooksResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/TopOfBook'
+      xml:
+        wrapped: true
+        name: TopOfBooks
+  
+  parameters:
+    
+    Cmdty:
+      in: path
+      name: Cmdty
+      required: true
+      schema:
+        $ref: '#/components/schemas/Cmdty'
+    
+    Area:
+      in: path
+      name: Area
+      required: true
+      schema:
+        $ref: '#/components/schemas/Area'
+    
+    TrdDate:
+      in: path
+      name: TrdDate
+      required: true
+      schema:
+        $ref: '#/components/schemas/TrdDate'
+    
+    ShortCode:
+      in: path
+      name: ShortCode
+      required: true
+      schema:
+        $ref: '#/components/schemas/ShortCode'
+    
+    Maturity:
+      in: path
+      name: Maturity
+      required: true
+      schema:
+        $ref: '#/components/schemas/Maturity'
+
+    Symbol:
+      in: path
+      name: Symbol
+      required: true
+      schema:
+        $ref: '#/components/schemas/Symbol'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  
+  responses:
+    BadRequest:
+      description: "Bad Request: The request contains invalid parameters or data."
+
+    UnauthenticatedError:
+      description: "Unauthorised: Authentication failed. User needs to check the required permissions."
+
+    ForbiddenError:
+      description: "Forbidden: Access denied. User does not possess the required permissions to access this resource."
+
+    NotFoundError:
+      description: "Not Found: The requested resource could not be found. This may be due to a typo in the URL or an attempt to access a non-existent endpoint."
+
+    RequestLimitReached:
+      description: "Access Denied: Number of requests has exceeded the defined limit."
+
+    InternalServerError:
+      description: "Internal Server Error: An unexpected server error occurred. Please try again later or contact support if the issue persists."
+
+    ServiceUnavailableError:
+      description: "Service Unavailable: The requested service is temporarily unavailable. This could be due to server maintenance or high traffic. Please try again later."
+    
+    NotAcceptableError:
+      description: "The 'limit' parameter is invalid. Please ensure it is an integer between 1 and 60000."
+
+
+paths:
+  /rd/derivatives/:
+    description: All available commodities.
+    get:
+      summary: Returns all available commodities.
+      description: Returns all available commodities.
+      operationId: getRDCmdty
+      tags:
+        - ReferenceData derivatives
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CmdtyResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CmdtyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /rd/derivatives/{Cmdty}/:
+    description: Returns all available areas.
+    get:
+      summary: Returns all areas for a specified commodity.
+      description: Returns all areas for a specified commodity.
+      operationId: getRDArea
+      tags:
+        - ReferenceData derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AreaResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AreaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /rd/derivatives/{Cmdty}/{Area}/:
+    description: All available trade dates
+    get:
+      summary: Returns all trade dates for a specified commodity and area.
+      description: Returns all trade dates for a specified commodity and area.
+      operationId: getRDDays
+      tags:
+        - ReferenceData derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrdDatesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TrdDatesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  
+  /rd/derivatives/{Cmdty}/{Area}/{TrdDate}:
+    get:
+      summary: Returns all contracts for a specified commodity, area and trade date.
+      description: Returns all contracts for a specified commodity, area and trade date.
+      operationId: getRDDay
+      tags:
+        - ReferenceData derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: productType
+          description: |
+            The type of the product. Leave blank to retrieve all product types, or enter one of the following values:
+              - Option
+              - Future
+              - Spot
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferenceDatasResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ReferenceDatasResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /rd/derivatives/{Cmdty}/{Area}/{TrdDate}/:
+    get:
+      summary: Returns all short codes for a specified commodity, area and trade date.
+      description: Returns all short codes for a specified commodity, area and trade date.
+      operationId: getRDShortCodesDay
+      tags:
+        - ReferenceData derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: productType
+          description: |
+            The type of the product. Leave blank to retrieve all product types, or enter one of the following values:
+              - Option
+              - Future
+              - Spot
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortCodesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ShortCodesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /rd/derivatives/{Cmdty}/{Area}/{TrdDate}/{ShortCode}:
+    get:
+      summary: Returns all contracts for a specified trade date and short code.
+      description: Returns all contracts for a specified trade date and short code.
+      operationId: getRDProductDay
+      tags:
+        - ReferenceData derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferenceDatasResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ReferenceDatasResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /rd/derivatives/{Cmdty}/{Area}/{TrdDate}/{ShortCode}/:
+    get:
+      summary: Returns all maturities for a specified commodity, area, trade date and short code.
+      description: All maturities for TrdDate and ShortCode
+      operationId: getRDMaturitiesDay
+      tags:
+        - ReferenceData derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaturitiesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/MaturitiesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /rd/derivatives/{Cmdty}/{Area}/{TrdDate}/{ShortCode}/{Maturity}:
+    get:
+      summary: Returns contract information for a specified commodity, area, trade date, short code and maturity.
+      description: Returns contract information for a specified commodity, area, trade date, short code and maturity.
+      operationId: getRDContract
+      tags:
+        - ReferenceData derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+        - $ref: '#/components/parameters/Maturity'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferenceDatasResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ReferenceDatasResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  ####
+  #### trades
+  ####
+  
+  /trd/derivatives/{Cmdty}/{Area}/{TrdDate}:
+    get:
+      summary: Returns all trades for a specified commodity, area and trade date.
+      description: Returns all trades for a specified commodity, area and trade date.
+      operationId: getTRDDay
+      tags:
+        - Trades derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+
+        - name: timeFrom
+          description: The start of the trade date range
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:00:29.183"
+
+        - name: timeTo
+          description: The end of the trade date range
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:05:29.183"
+
+        - name: trdType
+          description: |
+            Indicates whether the trades relates to a exchange trade or trade registration. Possible values:
+              - Exchange
+              - Trade Registration
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Exchange
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: productType
+          description: |
+            The type of the product. Leave blank to retrieve all product types, or enter one of the following values:
+              - Option
+              - Future
+              - Spot
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /trd/derivatives/{Cmdty}/{Area}/{TrdDate}/{ShortCode}:
+    get:
+      summary: Returns all trades for a specified commodity, area, trade date and short code.
+      description: Returns all trades for a specified commodity, area, trade date and short code.
+      operationId: getTRDProductDay
+      tags:
+        - Trades derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: timeFrom
+          description: The start of the trade date range
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:00:29.183"
+
+        - name: timeTo
+          description: The end of the trade date range
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:05:29.183"
+
+        - name: trdType
+          description: |
+            Indicates whether the trades relates to a exchange trade or trade registration. Possible values:
+              - Exchange
+              - Trade Registration
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Exchange
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /trd/derivatives/{Cmdty}/{Area}/{TrdDate}/{ShortCode}/{Maturity}:
+    get:
+      summary: Returns all trades for a contract on a specific trade date.
+      description: Returns all trades for a contract on a specific trade date.
+      operationId: getTRDContractDay
+      tags:
+        - Trades derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+        - $ref: '#/components/parameters/Maturity'
+
+        - name: timeFrom
+          description: The start of the trade date range
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:00:29.183"
+
+        - name: timeTo
+          description: The end of the trade date range
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:05:29.183"
+
+        - name: trdType
+          description: |
+            Indicates whether the trades relates to a exchange trade or trade registration. Possible values:
+              - Exchange
+              - Trade Registration
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Exchange
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: maturityOffset
+          description: |
+            Leave blank to retrieve given maturity, or enter a continious symbol to retrive future maturities (e.g. Y2 to retrieve the maturity in 2 years).
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Y2"
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /trds/derivatives/{Cmdty}/{Area}:
+    get:
+      summary: Returns all trades for a specified commodity and area on a defined trade series.
+      description: Returns all trades for a specified commodity and area on a defined trade series.
+      operationId: getTRDArea
+      tags:
+        - Trade series derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+
+        - name: trdType
+          description: |
+            Indicates whether the trades relates to a exchange trade or trade registration. Possible values:
+               - Exchange
+               - Trade Registration
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Exchange
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: productType
+          description: |
+            The type of the product. Leave blank to retrieve all product types, or enter one of the following values:
+              - Option
+              - Future
+              - Spot
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /trds/derivatives/{Cmdty}/{Area}/{ShortCode}:
+    get:
+      summary: Returns all trades for a specified commodity, area and short code on a defined trade series.
+      description: Returns all trades for a specified commodity, area and short code on a defined trade series.
+      operationId: getTRDProduct
+      tags:
+        - Trade series derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: trdType
+          description: |
+            Indicates whether the trades relates to a exchange trade or trade registration. Possible values:
+              - Exchange
+              - Trade Registration
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Exchange
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /trds/derivatives/{Cmdty}/{Area}/{ShortCode}/{Maturity}:
+    get:
+      summary: Returns all trades for a specified commodity, area, short code and maturity on a defined trade series.
+      description: Returns all trades for a specified commodity, area, short code and maturity on a defined trade series.
+      operationId: getTRDContract
+      tags:
+        - Trade series derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ShortCode'
+        - $ref: '#/components/parameters/Maturity'
+
+        - name: trdType
+          description: |
+            Indicates whether the trades relates to a exchange trade or trade registration. Possible values:
+              - Exchange
+              - Trade Registration
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Exchange
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: maturityOffset
+          description: |
+            Leave blank to retrieve given maturity, or enter a continious symbol to retrive future maturities (e.g. Y2 to retrieve the maturity in 2 years).
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Y2"
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TradesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  ####
+  #### top of books
+  ####
+  /tob/derivatives/{Cmdty}/{Area}/{TrdDate}:
+    get:
+      summary: Returns the most recent top of the order book values for a specified commodity, area and trade date.
+      description: |
+        Returns the most recent top of the order book values for a specified commodity, area and trade date.
+          - Current TrdDate - Returns most recent TOB based on current time unless specified otherwise
+          - Historic TrdDate - Returns end of day TOB for a specified trade date unless specified otherwise
+
+      operationId: getTOBContractDayArea
+      tags:
+        - TopOfBook derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: productType
+          description: |
+            The type of the product. Leave blank to retrieve all product types, or enter one of the following values:
+              - Option
+              - Future
+              - Spot
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+
+        - name: timeTo
+          in: query
+          description: |
+            Optional parameter used to filter the response by a specific timestamp. When provided, the API returns only data that is valid up to the specified time.
+            
+            - Current TrdDate - Returns TOB valid at specified time for the current trade date
+            - Historic TrdDate - Returns TOB valid at specified time for a specified trade date
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "14:23:29.183"
+
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopOfBooksResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TopOfBooksResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+
+  /tob/derivatives/{Cmdty}/{Area}/{TrdDate}/{Symbol}:
+    get:
+      summary: Returns the most recent top of the order book values for a specified commodity, area, trade date and rolling symbol.
+      description: Returns the most recent top of the order book values for a specified commodity, area, trade date and rolling symbol.
+      operationId: getTOBContractDaySymbol
+      tags:
+        - TopOfBook derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/Symbol'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: timeTo
+          description: The end of the trade date range
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:05:29.183"
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopOfBooksResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TopOfBooksResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /tobs/derivatives/{Cmdty}/{Area}/{TrdDate}/{Symbol}:
+    get:
+      summary: Returns the top-of-book history for a specified time series of a given trade date based on the defined commodity, market area and rolling symbol.
+      description: Returns the top-of-book history for a specified time series of a given trade date based on the defined commodity, market area and rolling symbol.
+      operationId: getTOBContractSymbol
+      tags:
+        - TopOfBook series derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/Symbol'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: timeFrom
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            type: string
+            format: time
+            example: "10:00:29.183"
+
+        - name: timeTo
+          description: The end of the trade date range
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "10:05:29.183"
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopOfBooksResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TopOfBooksResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /tob/derivatives/{Cmdty}/{Area}/{TrdDate}/{ShortCode}/{Maturity}:
+    get:
+      summary: Returns the most recent top of the order book values for a specified commodity, area, trade date, short code and maturity.
+      description: |
+        Returns the most recent top of the order book values for a specified commodity, area, trade date, short code and maturity.
+          - Current TrdDate → Returns most recent TOB based on current time unless specified otherwise
+          - Historic TrdDate → Returns end of day TOB for a specified trade date unless specified otherwise
+      
+      operationId: getTOBContractDayShortCodeMaturity
+      tags:
+        - TopOfBook derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+        - $ref: '#/components/parameters/Maturity'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: timeTo
+          in: query
+          description: |
+            Optional parameter used to filter the response by a specific timestamp. When provided, the API returns only data that is valid up to the specified time.
+            
+            - Current TrdDate → Returns TOB valid at specified time for the current trade date
+            - Historic TrdDate → Returns TOB valid at specified time for a specified trade date
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "14:23:29.183"
+
+        - name: maturityOffset
+          description: |
+            Leave blank to retrieve given maturity, or enter a continious symbol to retrive future maturities (e.g. Y2 to retrieve the maturity in 2 years).
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Y2"
+
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopOfBooksResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TopOfBooksResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /tobs/derivatives/{Cmdty}/{Area}/{TrdDate}/{ShortCode}/{Maturity}:
+    get:
+      summary: Returns the top-of-book history for a specified time series of a given trade date based on the defined commodity, market area, short code and maturity.
+      description: |
+        Returns the top-of-book history for a specified time series of a given trade date based on the defined commodity, market area, short code and maturity.
+        
+        - Current TrdDate → Returns all TOB changes between a specified start time and a specified (optional) end time on the current trade date.
+        - Historic TrdDate → Returns all TOB changes between a specified start time and a specified (optional) end time on a specified trade date.
+      operationId: getTOBContract
+      tags:
+        - TopOfBook series derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+        - $ref: '#/components/parameters/Maturity'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: timeFrom
+          description: |
+            Required parameter that defines the starting point of the time series for which top-of-book data is requested.
+            The API returns all relevant data from this timestamp onward, up to the optional timeTo value if provided.
+          in: query
+          required: true
+          schema:
+            type: string
+            format: time
+            example: "14:23:29.183"
+
+        - name: timeTo
+          description: |
+            Optional parameter that defines the end point of the time series for which top-of-book data is requested. When provided, the API returns only data that is valid up to the specified time.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: time
+            example: "15:23:29.183"
+
+        - name: maturityOffset
+          description: |
+            Leave blank to retrieve given maturity, or enter a continious symbol to retrive future maturities (e.g. Y2 to retrieve the maturity in 2 years).
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Y2"
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopOfBooksResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TopOfBooksResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  ####
+  #### Statistic
+  ####
+  
+  /stat/derivatives/{Cmdty}/{Area}/{TrdDate}:
+    get:
+      summary: Returns the Open, High, Low and Close (OHLC) statistics and open interest data for a specified commodity, area and trade date.
+      description: Returns the Open, High, Low and Close (OHLC) statistics and open interest data for a specified commodity, area and trade date.
+      operationId: getOHLCDay
+      tags:
+        - Statistics derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: productType
+          description: |
+            The type of the product. Leave blank to retrieve all product types, or enter one of the following values:
+              - Option
+              - Future
+              - Spot
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /stat/derivatives/{Cmdty}/{Area}/{TrdDate}/{ShortCode}:
+    get:
+      summary: Returns the Open, High, Low and Close (OHLC) statistics and open interest data for a specified commodity, area, trade date and short code.
+      description: Returns the Open, High, Low and Close (OHLC) statistics and open interest data for a specified commodity, area, trade date and short code.
+      operationId: getOHLCDayProduct
+      tags:
+        - Statistics derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /stat/derivatives/{Cmdty}/{Area}/{TrdDate}/{ShortCode}/{Maturity}:
+    get:
+      summary: Returns the Open, High, Low and Close (OHLC) statistics  and open interest data for  a specified commodity, area, trade date, short code and maturity.
+      description: Returns the Open, High, Low and Close (OHLC) statistics  and open interest data for  a specified commodity, area, trade date, short code and maturity.
+      operationId: getOHLCDayContract
+      tags:
+        - Statistics derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+        - $ref: '#/components/parameters/Maturity'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: maturityOffset
+          description: |
+            Leave blank to retrieve given maturity, or enter a continious symbol to retrive future maturities (e.g. Y2 to retrieve the maturity in 2 years).
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Y2"
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /stats/derivatives/{Cmdty}/{Area}:
+    get:
+      summary: Returns the Open, High, Low and Close (OHLC) statistics  and open interest data for  a specified commodity and area on a defined trade series.
+      description: Returns the Open, High, Low and Close (OHLC) statistics  and open interest data for  a specified commodity and area on a defined trade series.
+      operationId: getOHLCArea
+      tags:
+        - Statistics series derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: productType
+          description: |
+            The type of the product. Leave blank to retrieve all product types, or enter one of the following values:
+              - Option
+              - Future
+              - Spot
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /stats/derivatives/{Cmdty}/{Area}/{ShortCode}:
+    get:
+      summary: Returns the Open, High, Low and Close (OHLC) statistics  and open interest data for  a specified commodity, area and short code on a defined trade series.
+      description: Returns the Open, High, Low and Close (OHLC) statistics  and open interest data for  a specified commodity, area and short code on a defined trade series.
+      operationId: getOHLCProduct
+      tags:
+        - Statistics series derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /stats/derivatives/{Cmdty}/{Area}/{ShortCode}/{Maturity}:
+    get:
+      summary: Returns the Open, High, Low and Close (OHLC) statistics and open interest data for a specified commodity, area, short code and maturity on a defined trade series.
+      description: Returns the Open, High, Low and Close (OHLC) statistics and open interest data for a specified commodity, area, short code and maturity on a defined trade series.
+      operationId: getOHLCContract
+      tags:
+        - Statistics series derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ShortCode'
+        - $ref: '#/components/parameters/Maturity'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: maturityOffset
+          description: |
+            Leave blank to retrieve given maturity, or enter a continious symbol to retrive future maturities (e.g. Y2 to retrieve the maturity in 2 years).
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Y2"
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  ####
+  #### settlement
+  ####
+  
+  /spr/derivatives/{Cmdty}/{Area}/{TrdDate}:
+    get:
+      summary: Returns all settlement prices for a specified commodity and area on a defined trade date.
+      description: Returns all settlement prices for a specified commodity and area on a defined trade date.
+      operationId: getSettlementDay
+      tags:
+        - Settlement derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: productType
+          description: |
+            The type of the product. Leave blank to retrieve all product types, or enter one of the following values:
+              - Option
+              - Future
+              - Spot
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SettlementsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /spr/derivatives/{Cmdty}/{Area}/{TrdDate}/{ShortCode}:
+    get:
+      summary: Returns all settlement prices for a specified commodity, area and short code on a defined trade date.
+      description: Returns all settlement prices for a specified commodity, area and short code on a defined trade date.
+      operationId: getSettlementProductDay
+      tags:
+        - Settlement derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SettlementsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /spr/derivatives/{Cmdty}/{Area}/{TrdDate}/{ShortCode}/{Maturity}:
+    get:
+      summary: Returns all settlement prices for a specified commodity, area, short code and maturity on a defined trade date.
+      description: Returns all settlement prices for a specified commodity, area, short code and maturity on a defined trade date.
+      operationId: getSettlementContractDay
+      tags:
+        - Settlement derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/TrdDate'
+        - $ref: '#/components/parameters/ShortCode'
+        - $ref: '#/components/parameters/Maturity'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: maturityOffset
+          description: |
+            Leave blank to retrieve given maturity, or enter a continious symbol to retrive future maturities (e.g. Y2 to retrieve the maturity in 2 years).
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Y2"
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SettlementsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /sprs/derivatives/{Cmdty}/{Area}:
+    get:
+      summary: Returns all settlement prices for a specified commodity and area on a defined trade series.
+      description: Returns all settlement prices for a specified commodity and area on a defined trade series.
+      operationId: getSettlementArea
+      tags:
+        - Settlement series derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: productType
+          description: |
+            The type of the product. Leave blank to retrieve all product types, or enter one of the following values:
+              - Option
+              - Future
+              - Spot
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SettlementsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /sprs/derivatives/{Cmdty}/{Area}/{ShortCode}:
+    get:
+      summary: Returns all settlement prices for a specified commodity, area and short code on a defined trade series.
+      description: Returns all settlement prices for a specified commodity, area and short code on a defined trade series.
+      operationId: getSettlementProduct
+      tags:
+        - Settlement series derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ShortCode'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SettlementsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /sprs/derivatives/{Cmdty}/{Area}/{ShortCode}/{Maturity}:
+    get:
+      summary: Returns all settlement prices for a specified commodity, area, short code and maturity on a defined trade series.
+      description: Returns all settlement prices for a specified commodity, area, short code and maturity on a defined trade series.
+      operationId: getSettlementContract
+      tags:
+        - Settlement series derivatives
+      parameters:
+        - $ref: '#/components/parameters/Cmdty'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ShortCode'
+        - $ref: '#/components/parameters/Maturity'
+
+        - name: instrumentType
+          description: |
+            The type of the instrument. Possible values:
+              - Simple Instrument
+              - Futures Spread
+              - Inter-Product Spread
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple Instrument
+
+        - name: from
+          description: The start of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: to
+          description: The end of the trade date range
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/TrdDate'
+
+        - name: maturityOffset
+          description: |
+            Leave blank to retrieve given maturity, or enter a continious symbol to retrive future maturities (e.g. Y2 to retrieve the maturity in 2 years).
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Y2"
+
+        - name: limit
+          description: |
+            Leave blank to retrieve the maximum rows (60000), or enter the number of records you want to retrieve.
+            In the API preview interface, an example value of 10 is set to limit responses, as the preview function is not designed for displaying large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          description: Leave blank to retrieve all fields, or enter specific fields to retrieve only those (e.g.&fields=TrdDate,Cmdty,Area)
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SettlementsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'

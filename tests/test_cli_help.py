@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import UTC, datetime
 
 import pytest
 
@@ -51,3 +52,25 @@ def test_every_option_has_help_text() -> None:
 
     inspect(build_parser(), "eex-datasource")
     assert missing == []
+
+
+@pytest.mark.parametrize("job", ["transparency-umm", "transparency-series"])
+def test_timestamp_options_parse_iso8601_with_utc_default(job) -> None:
+    extra = (
+        [] if job == "transparency-umm" else ["--area", "DE", "--symbol", "Capacity"]
+    )
+    args = build_parser().parse_args(
+        [
+            "sync",
+            job,
+            "--commodity",
+            "POWER",
+            "--from",
+            "2026-01-01T00:00:00",
+            "--to",
+            "2026-01-02T00:00:00Z",
+            *extra,
+        ]
+    )
+    assert args.date_from == datetime(2026, 1, 1, tzinfo=UTC)
+    assert args.date_to == datetime(2026, 1, 2, tzinfo=UTC)

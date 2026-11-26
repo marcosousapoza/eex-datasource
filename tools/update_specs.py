@@ -11,6 +11,7 @@ DESTINATION = Path(__file__).parents[1] / "specs"
 
 
 def main() -> None:
+    """Refresh the five authoritative OpenAPI snapshots from EEX's public site."""
     DESTINATION.mkdir(exist_ok=True)
     for name in NAMES:
         url = f"{BASE_URL}/{name}.yaml"

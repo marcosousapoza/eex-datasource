@@ -38,6 +38,7 @@ from .models import (
 
 
 def record_hash(record: Any) -> str:
+    """Hash canonical source JSON so unchanged records can be deduplicated."""
     encoded = json.dumps(
         record,
         sort_keys=True,
@@ -49,12 +50,14 @@ def record_hash(record: Any) -> str:
 
 
 def stable_key(*values: Any) -> str:
+    """Build a deterministic digest from an ordered set of identity fields."""
     return hashlib.sha256(
         "|".join("" if value is None else str(value) for value in values).encode()
     ).hexdigest()
 
 
 def as_date(value: Any) -> date | None:
+    """Convert an EEX date or timestamp to a date, preserving absent values."""
     if value in (None, ""):
         return None
     if isinstance(value, date) and not isinstance(value, datetime):
@@ -63,6 +66,7 @@ def as_date(value: Any) -> date | None:
 
 
 def as_datetime(value: Any) -> datetime | None:
+    """Parse an EEX ISO-8601 timestamp, preserving its source timezone."""
     if value in (None, ""):
         return None
     if isinstance(value, datetime):
@@ -72,6 +76,7 @@ def as_datetime(value: Any) -> datetime | None:
 
 
 def as_decimal(value: Any) -> Decimal | None:
+    """Convert a numeric source value without introducing binary rounding."""
     if value in (None, ""):
         return None
     try:
@@ -85,6 +90,13 @@ def _id() -> str:
 
 
 class DataRepository:
+    """Normalize source records and retain corrections as distinct versions.
+
+    Each public ``store_*`` operation commits its batch and returns the number
+    of inserted rows. Original objects are retained alongside typed columns;
+    field names follow the bundled EEX schemas in ``specs/``.
+    """
+
     def __init__(self, session: Session) -> None:
         self.session = session
 
@@ -95,6 +107,7 @@ class DataRepository:
         records: list[dict[str, Any]],
         source_fetch_id: str | None,
     ) -> int:
+        """Store one market resource, retaining revisions and fetch provenance."""
         handlers = {
             "reference": self._instruments,
             "trades": self._trades,
@@ -349,6 +362,7 @@ class DataRepository:
         records: list[dict[str, Any]],
         source_fetch_id: str | None,
     ) -> int:
+        """Store auction reference data or versioned results/revenue records."""
         inserted = 0
         for item in records:
             auction_id = int(item["AuctID"])
@@ -440,6 +454,7 @@ class DataRepository:
     def store_indices(
         self, records: list[dict[str, Any]], source_fetch_id: str | None
     ) -> int:
+        """Flatten nested index ticks and insert previously unseen observations."""
         inserted = 0
         for item in records:
             ticks = item.get("Ticks")
@@ -506,6 +521,7 @@ class DataRepository:
         source_fetch_id: str | None,
         validity_date: date | None = None,
     ) -> int:
+        """Store the asset tree and, when dated, historical reference snapshots."""
         count = 0
         for company_data in records:
             company_id = company_data.get("companyID")
@@ -698,6 +714,7 @@ class DataRepository:
         *,
         kind: str = "umm",
     ) -> int:
+        """Retain message revisions and advance each thread's latest version."""
         inserted = 0
         for item in records:
             message_id = item.get("messageID")
@@ -767,6 +784,7 @@ class DataRepository:
         *,
         source: str = "transparency",
     ) -> int:
+        """Store series definitions and versioned timestamp/value observations."""
         inserted = 0
         for item in records:
             key = stable_key(

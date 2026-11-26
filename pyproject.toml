@@ -19,6 +19,7 @@ progress = ["tqdm>=4.67"]
 dev = [
     "pytest>=8.3",
     "pytest-cov>=6.0",
+    "pyyaml>=6.0.2",
 ]
 
 [project.scripts]
@@ -31,3 +32,6 @@ build-backend = "uv_build"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+    "integration: read-only live EEX tests; require EEX_ACCESS_TOKEN",
+]

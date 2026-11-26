@@ -1,21 +1,24 @@
-"""Gas Spot endpoints."""
+"""Gas Spot endpoints from ``specs/gas_spot.yaml``.
+
+Source: https://eds.eex-group.com/api-spec/gas_spot.yaml
+"""
 
 from __future__ import annotations
 
 from typing import Any
 
-from .base import BaseAPI, segment
+from .base import segment
+from .market import MarketAPI
 
 
-class GasSpotAPI(BaseAPI):
-    def commodities(self) -> list[str]:
-        return self._get("/rd/spot/")
+class GasSpotAPI(MarketAPI):
+    """Discover and retrieve gas spot contracts and daily market records."""
+
+    market = "spot"
 
     def areas(self, commodity: str = "NATGAS") -> list[str]:
-        return self._get(f"/rd/spot/{segment(commodity)}/")
-
-    def trade_dates(self, commodity: str, area: str) -> list[str]:
-        return self._get(f"/rd/spot/{segment(commodity)}/{segment(area)}/")
+        """List gas market areas; the specified commodity defaults to NATGAS."""
+        return super().areas(commodity)
 
     def reference_data(
         self,
@@ -27,46 +30,19 @@ class GasSpotAPI(BaseAPI):
         limit: int = 60_000,
         **filters: Any,
     ) -> list[dict[str, Any]]:
-        path = f"/rd/spot/{segment(commodity)}/{segment(area)}/{segment(trade_date)}"
-        if shortcode is not None:
-            path += f"/{segment(shortcode)}"
-        return self._get(path, limit=limit, **filters)
+        """Fetch ``/rd`` contracts, optionally scoped to a gas shortcode.
 
-    def shortcodes(self, commodity: str, area: str, trade_date: str) -> list[str]:
-        return self._get(
-            f"/rd/spot/{segment(commodity)}/{segment(area)}/{segment(trade_date)}/"
+        Extra filters use OpenAPI query names, such as ``fields``.
+        """
+        return self._day_resource(
+            "rd",
+            commodity,
+            area,
+            trade_date,
+            shortcode,
+            limit=limit,
+            **filters,
         )
-
-    def _day_resource(
-        self,
-        resource: str,
-        commodity: str,
-        area: str,
-        trade_date: str,
-        shortcode: str | None = None,
-        *,
-        limit: int = 60_000,
-        **filters: Any,
-    ) -> list[dict[str, Any]]:
-        path = (
-            f"/{resource}/spot/{segment(commodity)}/{segment(area)}/"
-            f"{segment(trade_date)}"
-        )
-        if shortcode is not None:
-            path += f"/{segment(shortcode)}"
-        return self._get(path, limit=limit, **filters)
-
-    def trades(self, *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
-        return self._day_resource("trd", *args, **kwargs)
-
-    def top_of_book(self, *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
-        return self._day_resource("tob", *args, **kwargs)
-
-    def statistics(self, *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
-        return self._day_resource("stat", *args, **kwargs)
-
-    def settlements(self, *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
-        return self._day_resource("spr", *args, **kwargs)
 
     def history(
         self,
@@ -80,19 +56,45 @@ class GasSpotAPI(BaseAPI):
         limit: int = 60_000,
         **filters: Any,
     ) -> list[dict[str, Any]]:
-        plural = {"trd": "trds", "stat": "stats", "spr": "sprs"}
-        if resource not in plural:
-            raise ValueError(
-                "resource must be 'trd', 'stat', or 'spr'; use "
-                "top_of_book_history() for order-book history"
-            )
-        path = f"/{plural[resource]}/spot/{segment(commodity)}/{segment(area)}"
-        if shortcode is not None:
-            path += f"/{segment(shortcode)}"
-        return self._get(
-            path,
-            **{"from": date_from, "to": date_to, "limit": limit, **filters},
+        """Fetch a date range for ``trd``, ``stat``, or ``spr`` records."""
+        return self._history(
+            resource,
+            commodity,
+            area,
+            shortcode,
+            date_from=date_from,
+            date_to=date_to,
+            limit=limit,
+            **filters,
         )
+
+    def top_of_book(
+        self,
+        commodity: str,
+        area: str,
+        trade_date: str,
+        shortcode: str | None = None,
+        *,
+        limit: int = 60_000,
+        **filters: Any,
+    ) -> list[dict[str, Any]]:
+        """Fetch latest ``/tob`` snapshots, discovering shortcodes if omitted.
+
+        The Gas Spot OpenAPI only defines a shortcode-scoped snapshot route.
+        ``limit`` is accepted for pooled calls but is not sent to this route.
+        """
+        shortcodes = (
+            [shortcode]
+            if shortcode is not None
+            else self.shortcodes(commodity, area, trade_date)
+        )
+        return [
+            record
+            for code in shortcodes
+            for record in self._day_resource(
+                "tob", commodity, area, trade_date, code, limit=limit, **filters
+            )
+        ]
 
     def top_of_book_history(
         self,
@@ -106,6 +108,7 @@ class GasSpotAPI(BaseAPI):
         limit: int = 60_000,
         **filters: Any,
     ) -> list[dict[str, Any]]:
+        """Fetch every ``/tobs`` change for a shortcode in market-time bounds."""
         return self._get(
             f"/tobs/spot/{segment(commodity)}/{segment(area)}/"
             f"{segment(trade_date)}/{segment(shortcode)}",
@@ -114,19 +117,3 @@ class GasSpotAPI(BaseAPI):
             limit=limit,
             **filters,
         )
-
-    def market_day(
-        self,
-        commodity: str,
-        area: str,
-        trade_date: str,
-        *,
-        limit: int = 60_000,
-    ) -> dict[str, Any]:
-        return {
-            "reference": self.reference_data(commodity, area, trade_date, limit=limit),
-            "trades": self.trades(commodity, area, trade_date, limit=limit),
-            "top_of_book": self.top_of_book(commodity, area, trade_date, limit=limit),
-            "statistics": self.statistics(commodity, area, trade_date, limit=limit),
-            "settlements": self.settlements(commodity, area, trade_date, limit=limit),
-        }

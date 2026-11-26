@@ -33,6 +33,13 @@ ROW_LIMIT = 60_000
 
 
 class Synchronizer:
+    """Run paced, cached imports while recording run status and watermarks.
+
+    Jobs return their run ID. Imports are idempotent, acquire a database lease,
+    and fail rather than accepting potentially truncated leaf responses.
+    Request shapes follow the EEX OpenAPI snapshots in ``specs/``.
+    """
+
     def __init__(
         self,
         client: EEXClient,
@@ -56,6 +63,9 @@ class Synchronizer:
         date_from: date,
         date_to: date,
     ) -> str:
+        """Import daily market resources for available dates in an inclusive range."""
+        if market not in {"derivatives", "gas_spot"}:
+            raise ValueError("market must be derivatives or gas_spot")
         parameters = {
             "market": market,
             "commodity": commodity,
@@ -137,6 +147,23 @@ class Synchronizer:
             "settlements": api.settlements,
         }
         for resource, method in methods.items():
+            if market == "gas_spot" and resource == "top_of_book":
+                # The API has no area-wide spot TOB route. Store each response
+                # separately so its rows retain the correct fetch provenance.
+                for shortcode in api.shortcodes(commodity, area, business_date):
+                    try:
+                        records = method(commodity, area, business_date, shortcode)
+                    except EEXNotFoundError:
+                        continue
+                    if len(records) >= ROW_LIMIT:
+                        raise EEXTruncationError(
+                            f"top_of_book shortcode response reached "
+                            f"{ROW_LIMIT}: {shortcode}"
+                        )
+                    count += repository.store_market(
+                        market, resource, records, transport.last_fetch_id
+                    )
+                continue
             try:
                 records = method(commodity, area, business_date, limit=ROW_LIMIT)
             except EEXNotFoundError:
@@ -211,6 +238,7 @@ class Synchronizer:
         date_from: date,
         date_to: date,
     ) -> str:
+        """Import auction reference records, results, and revenues by date."""
         parameters = {
             "commodity": commodity,
             "area": area,
@@ -365,6 +393,7 @@ class Synchronizer:
         area: str | None = None,
         index: str | None = None,
     ) -> str:
+        """Import index observations, discovering any omitted scope components."""
         parameters = {
             "commodity": commodity,
             "area": area,
@@ -431,6 +460,7 @@ class Synchronizer:
     def transparency_reference(
         self, commodity: str, area: str, validity_date: date
     ) -> str:
+        """Import an asset reference tree and snapshots for one validity date."""
         parameters = {
             "commodity": commodity,
             "area": area,
@@ -472,6 +502,7 @@ class Synchronizer:
         facility_type: str | None = None,
         adhoc: bool = False,
     ) -> str:
+        """Import UMM/ad-hoc revisions in bounded modification-time windows."""
         parameters = {
             "commodity": commodity,
             "area": area,
@@ -541,6 +572,7 @@ class Synchronizer:
         eurowind: bool = False,
         filters: dict[str, Any] | None = None,
     ) -> str:
+        """Import versioned transparency/EuroWind points in weekly windows."""
         parameters = {
             "commodity": commodity,
             "area": area,

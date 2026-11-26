@@ -93,6 +93,33 @@ client.indices
 client.transparency
 ```
 
+Endpoint methods document their behavior in docstrings and refer to the
+OpenAPI snapshots in [`specs/`](specs/README.md). Additional query filters use
+the API's original names (for example, `fields=["TrdDate", "Px"]`).
+
+Important endpoint differences:
+
+- Gas Spot top-of-book snapshots require a shortcode. If omitted, the client
+  discovers shortcodes and pools their snapshots; synchronization retains
+  provenance separately for each response.
+- Snapshot top-of-book, auction/transparency reference data, and
+  shortcode-scoped derivatives reference routes do not support `limit`.
+  The argument remains accepted for pooled calls but is not sent on these
+  routes. Transparency series also use time bounds rather than `limit`.
+- Derivative maturities require a shortcode. Transparency asset IDs require
+  their parent IDs, and UMM update scoping requires both `area` and
+  `facility_type`; incomplete combinations raise `ValueError`.
+- `current_umms()` and `current_adhoc()` require the keyword `validity_from`,
+  matching the API's mandatory `validityFrom` query parameter. For example:
+
+  ```python
+  client.transparency.current_umms(
+      "POWER", "DE", "Producer",
+      validity_from="2026-11-25T00:00:00Z",
+      validity_to="2026-11-26T00:00:00Z",
+  )
+  ```
+
 All date-time values returned by EEX remain in their source dictionaries. The
 storage layer converts commonly queried fields to Python/SQL date, timestamp,
 and decimal types.
@@ -327,9 +354,38 @@ deployment platform rather than embedding another scheduler.
 
 ```bash
 uv sync --extra dev --extra progress
-uv run pytest
+uv run --extra dev pytest
 uv build
 ```
+
+The offline tests check adapter paths, trailing slashes, query names, and
+required query parameters against the bundled OpenAPI files. PyYAML is used
+only for these development tests, not by the runtime client.
+
+### Optional live API tests
+
+Live tests run automatically **only when `EEX_ACCESS_TOKEN` is nonempty**:
+
+```bash
+export EEX_ACCESS_TOKEN="..."
+uv run --extra dev pytest -m integration -rs
+```
+
+Without a token, they skip without making network requests. To run only the
+offline suite even when credentials are configured:
+
+```bash
+uv run --extra dev pytest -m "not integration"
+```
+
+The live tests discover entitled commodities, areas, and dates across all five
+API families. They make read-only requests with small limits where supported
+and use flat company discovery instead of downloading transparency asset trees.
+They share a paced client, respect a minimum 1.05-second request interval, and
+honor `EEX_BASE_URL` and `EEX_TIMEOUT`. HTTP 403 and empty discovery lists skip
+unavailable products; invalid credentials (HTTP 401), other API failures, and
+unexpected response shapes fail the tests. Do not run live tests concurrently
+with other jobs using the same account.
 
 The authoritative OpenAPI files and their source URLs are listed in
 [`specs/README.md`](specs/README.md).

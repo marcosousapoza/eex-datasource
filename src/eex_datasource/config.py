@@ -9,6 +9,8 @@ from pathlib import Path
 
 @dataclass(frozen=True, slots=True)
 class Settings:
+    """Immutable client/storage settings; see the README configuration table."""
+
     access_token: str | None = None
     database_url: str = "sqlite:///eex-datasource.db"
     archive_dir: Path = Path("eex-archive")
@@ -19,6 +21,7 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> Settings:
+        """Load EEX_* environment variables, falling back to package defaults."""
         return cls(
             access_token=os.getenv("EEX_ACCESS_TOKEN"),
             database_url=os.getenv("EEX_DATABASE_URL", "sqlite:///eex-datasource.db"),

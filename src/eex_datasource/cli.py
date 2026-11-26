@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the CLI parser, using environment settings as option defaults."""
     defaults = Settings.from_env()
     parser = argparse.ArgumentParser(
         prog="eex-datasource",
@@ -265,9 +266,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--facility-type",
         help="Optional facility type such as Producer, Consumer, or Storage.",
     )
-    umm.add_argument("--from", dest="date_from", required=True, type=_datetime)
-    umm.add_argument("--to", dest="date_to", required=True, type=_datetime)
-    _timestamp_help(umm)
+    _timestamp_range(umm)
     umm.add_argument(
         "--adhoc",
         action="store_true",
@@ -293,9 +292,7 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="EEX series symbol, for example AvailableCapacity.",
     )
-    series.add_argument("--from", dest="date_from", required=True, type=_datetime)
-    series.add_argument("--to", dest="date_to", required=True, type=_datetime)
-    _timestamp_help(series)
+    _timestamp_range(series)
     series.add_argument(
         "--eurowind",
         action="store_true",
@@ -403,19 +400,28 @@ def _date_range(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def _timestamp_help(parser: argparse.ArgumentParser) -> None:
-    """Attach help text after timestamp options have been created."""
-
-    for action in parser._actions:
-        if action.dest == "date_from":
-            action.metavar = "TIMESTAMP"
-            action.help = "Inclusive ISO-8601 start, for example 2026-11-24T00:00:00Z."
-        elif action.dest == "date_to":
-            action.metavar = "TIMESTAMP"
-            action.help = "Exclusive ISO-8601 end, for example 2026-11-25T00:00:00Z."
+def _timestamp_range(parser: argparse.ArgumentParser) -> None:
+    """Add timestamp options without inspecting argparse's private actions."""
+    parser.add_argument(
+        "--from",
+        dest="date_from",
+        required=True,
+        type=_coerce_datetime,
+        metavar="TIMESTAMP",
+        help="Inclusive ISO-8601 start, for example 2026-11-24T00:00:00Z.",
+    )
+    parser.add_argument(
+        "--to",
+        dest="date_to",
+        required=True,
+        type=_coerce_datetime,
+        metavar="TIMESTAMP",
+        help="Exclusive ISO-8601 end, for example 2026-11-25T00:00:00Z.",
+    )
 
 
 def main(argv: list[str] | None = None) -> None:
+    """Execute a CLI command and exit with its result status."""
     parser = build_parser()
     args = parser.parse_args(argv)
     logging.basicConfig(
@@ -556,13 +562,9 @@ def _upgrade(database_url: str) -> None:
     command.upgrade(configuration, "head")
 
 
-def _datetime(value: str) -> datetime:
-    result = datetime.fromisoformat(value)
-    return _coerce_datetime(result)
-
-
 def _coerce_datetime(value: str | datetime) -> datetime:
-    result = _datetime(value) if isinstance(value, str) else value
+    """Parse ISO-8601 timestamps, treating naive values as UTC."""
+    result = datetime.fromisoformat(value) if isinstance(value, str) else value
     return result.replace(tzinfo=UTC) if result.tzinfo is None else result
 
 

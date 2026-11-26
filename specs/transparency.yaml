@@ -1,0 +1,2996 @@
+openapi: '3.0.4'
+info:
+  title: Transparency API
+  version: '1.0.1'
+  description: |
+    The EEX Transparency API allows users to receive real-time or delayed fundamental data directly from the EEX Transparency Platform.
+    
+    The API is designed to be used by market participants, regulators, and other stakeholders to retrieve transparency data of the EEX Transparency Platform in a programmatic way.
+    
+    Users can access the following data:
+    - Reference Data
+      - Company information
+      - Facility information
+      - Unit information
+      - Capacity information
+      
+    - Urgent Market Messages (UMMs)
+      - Non-availabilities for power and gas units
+      - "Other Market information" as ad-hoc messages
+      
+    - Time Series Data
+      - Forecast and actual power generation per country and fuel type
+      - Actual power generation per unit
+      - Actual wind and solar generation data
+      - Non-usable and available capacity per country and fuel type
+      - ...
+      
+    
+    The API is based on the REST principles and uses the JSON format for data exchange and is secured using the OAuth 2.0 protocol. Furthermore, the API is versioned using the semantic versioning scheme.
+
+    The EEX Transparency API is specified using the <a href="https://swagger.io/specification/v3/" target="_blank">OpenAPI standard</a>, which ensures a consistent and machine-readable definition of all endpoints and available data structures.
+    
+    **Previewing the endpoint results**
+    The API website provides a preview feature to test endpoints and display small sample responses (an API key must be entered via the "Authorize" button to execute a call). It is intended for testing and is not designed for displaying large datasets. Therefore, an example value of 10 has been set to limit responses.
+    These presets apply exclusively to the preview feature. Regular API calls can retrieve up to 60,000 rows per single request.
+    
+    <a href="/api-spec/transparency.yaml" target="_blank">Download of yaml file</a>
+    
+    More information:
+  license:
+    name: Subscribe to EEX REST API
+    url: https://webshop.eex-group.com/data-type/eex-transparency-data-power-api-rt
+    
+  termsOfService: https://www.eex.com/en/market-data/eex-group-datasource/licensing-conditions
+  
+  contact:
+    name: EEX | Market Data Services
+    email: datasource@eex-group.com
+  
+servers:
+  - url: https://api.eex-group.com/v2
+    description: Base URL
+    
+security:
+  - bearerAuth: []
+
+components:
+  schemas:
+    ####
+    #### all fields
+    ####
+    
+    # key fields
+    CompanyID:
+      description: The companyID is the unique identifier of the company.
+      type: string
+      example: BASF_AG
+      xml:
+        name: companyID
+    
+    FacilityID:
+      description: The facilityID is the unique identifier of the facility.
+      type: string
+      example: E110194
+      xml:
+        name: facilityID
+    
+    UnitID:
+      description: The unitID is the unique identifier of the unit.
+      type: string
+      example: E110194-001
+      xml:
+        name: unitID
+    
+    FacilityType:
+      description: |
+        The Facility Type is the type of the facility.
+        - Producer
+        - Consumer
+        - Storage
+        - Transmission
+      type: string
+      example: Producer
+    
+    # entitlement fields
+    # ...
+    
+    Commodity:
+      description: |
+        The classification of the energy commodity.
+        Currently supported values are:
+        - POWER
+        - NATGAS
+        - OTHER
+      type: string
+      example: POWER
+    
+    Area:
+      description: |
+        The Area is a geographically defined country code (ISO 3166-1 alpha-2).
+        Currently supported values are:
+        - AT
+        - BE
+        - BG
+        - CH
+        - CZ
+        - DE
+        - DK
+        - EE
+        - ES
+        - FI
+        - FR
+        - GB
+        - GR
+        - HR
+        - HU
+        - IE
+        - IT
+        - IS
+        - MD
+        - ME
+        - MK
+        - NO
+        - LV
+        - LT
+        - NL
+        - PL
+        - PT
+        - RO
+        - SE
+        - SI
+        - SK
+        - UA
+      type: string
+      example: DE
+    
+    # ...
+    
+    ModifiedDate:
+      description: Modified refers to the date and time at which the data was updated. By specifying the date, you can query data changes for that day.
+      type: string
+      format: date-time
+      example: "2024-04-01T13:59:14Z"
+    
+    ValidityDate:
+      description: The validity date is the date on which the data was distributed.
+      type: string
+      format: date
+      example: "2024-04-01"
+    
+    Symbol:
+      description: |
+        The symbol information specifies the data type of the time series.
+        
+        Power Generation:
+        - ActualInstalledCapacitySource
+        - AvailableCapacity
+        - AvailableCapacityHourly
+        - NonUsableCapacity
+        - NonUsableCapacityHourly
+        - ForecastGenerationFuelTypeHourly
+        - ForecastGenerationFuelType15min
+        - ActualGenerationFuelTypeHourly
+        - ActualGenerationFuelType15min
+        - ActualGenerationUnitHourly
+        - ActualGenerationUnit15min
+        - ForecastRenewableGenerationTSO15min
+        - ActualRenewableGeneration15min
+        
+        EuroWind Renewables:
+        - ForecastRenewableGenerationEW15min
+        - ActualRenewableGenerationEW15min
+        
+        Power Storage:
+        - ActualPumpingCapacityCountry
+        - ActualWorkingCapacityCountry
+        - FillingLevel
+        
+        Power Consumption:
+        - ActualPowerConsumptionCapacityCountry
+        - ForecastPowerConsumptionCountryHourly
+        - ActualPowerConsumptionCountryHourly
+        
+        Gas Consumption:
+        - ActualGasConsumptionCapacityCountry
+        - ForecastGasConsumptionCountry
+        - ActualGasConsumptionCountry
+        
+      type: string
+      example: NonUsableCapacityHourly
+      xml:
+        name: symbol
+    
+    FuelType:
+      description: |
+          The field fuelType gives additional information on the source of energy used by the production or generation unit concerned.
+          This field is only relevant for power generation reference data, time series data and UMMs.
+          Currently supported values are:
+          - Biomass
+          - Fossil Brown coal/Lignite
+          - Fossil Coal-derived gas
+          - Fossil Gas
+          - Fossil Hard coal
+          - Fossil Oil
+          - Fossil Oil shale
+          - Fossil Peat
+          - Geothermal
+          - Hydro Pumped Storage
+          - Hydro Run-of-river and poundage
+          - Hydro Water Reservoir
+          - Marine
+          - Nuclear
+          - Other renewable
+          - Solar
+          - Waste
+          - Wind Offshore
+          - Wind Onshore
+          - Other
+      type: string
+      example: Fossil Hard coal
+      xml:
+        name: fuelType
+    
+    unitMeasure:
+      description: |
+          This field specifies the unit of measurement used for the reported quantity.
+          Currently supported values are:
+          - MWh/h
+          - MWh
+          - MW
+          - kWh/h
+          - kWh/d
+          - GWh/d
+          - GWh/h
+          - GWh
+          - TWh
+          - mcm/d
+          - €/MWh
+      type: string
+      example: MW
+      xml:
+        name: unitMeasure
+    
+    ####
+    #### Master Data
+    ####
+    
+    Shareholder:
+      description: The shareholder record gives information about the shareholders of a unit.
+      type: object
+      properties:
+        ace:
+          description: The field ace contains the ACER registration code of the units shareholder company in accordance with Article 9 of Regulation (EU) No 1227/2011.
+          type: string
+          example: A0002192G.DE
+        name:
+          description: This is the official legal name of the company that holds a share in a unit.
+          type: string
+          example: Uniper
+        share:
+          description: The share gives information on the shareholder ratio of the shareholder company.
+          type: number
+          format: double
+          example: 50.0
+      required:
+        - ace
+      xml:
+        name: shareholder
+    
+    Capacity:
+      description: The installedCapacity information is used for publication of information referring to the installed capacity (i.e. installed net bottleneck output) of a generation, storage, consumption and transmission unit. The workingCapacity information refers to the working capacity of power storage unit.
+      type: object
+      properties:
+        installedCapacity:
+          type: number
+          format: double
+          example: 390.0
+        workingCapacity:
+          type: number
+          format: double
+          example: 380.0
+        unitMeasure:
+          $ref: '#/components/schemas/unitMeasure'
+        validFrom:
+          type: string
+          format: date-time
+          example: "2010-12-31T23:00:00Z"
+        modified:
+          type: string
+          format: date-time
+          example: "2011-11-08T13:59:14Z"
+        published:
+          type: string
+          format: date-time
+          example: "2011-11-08T13:59:14Z"
+      xml:
+        name: capacity
+    
+    Unit:
+      description: The unit information is used to publish information relating to generation, storage, consumption and transmission units.
+      type: object
+      properties:
+        unitID:
+          $ref: '#/components/schemas/UnitID'
+        unitName:
+          description: The official name of the generation or production unit, consumption unit, transmission, or other gas/electricity asset.
+          type: string
+          example: Block GT1
+        controlArea: # commodity=POWER only
+          description: |
+            The field 'controlArea' indicates the control area to which the corresponding unit is connected.
+            The following values are supported:
+            - TenneT (DE)
+            - TransnetBW
+            - Amprion
+            - 50Hertz
+            - APG
+            - CEPS
+            - SwissGrid
+            - Elia
+            - TenneT (NL)
+            - MAVIR
+            - National Grid
+            - PSE
+            - Terna
+            - REE
+            - RTE
+            - Transelectrica
+            - EirGrid
+            - Energinet
+            - DK2
+            - IPTO
+            - Svenska Kraftnät
+          type: string
+          example: TransnetBW
+        marketArea: # commodity=NATGAS only
+          description: |
+            The field 'marketArea' indicates the market area to which the corresponding unit is connected.
+            The following values are supported:
+            - CEGH
+            - PSV IT
+            - VOB
+            - TTF
+            - THE
+            - VTP-FI
+            - FINLAND_GAS_BALZ
+            - GAS_SYS_ESTONIA
+            - BALTIC-BAL
+            - VTP-LT
+            - VTP-DK
+            - VTP Greece
+            - Gaspool
+            - NCG
+          type: string
+          example: CEGH
+        fuelType:
+          $ref: '#/components/schemas/FuelType'
+        commodity:
+          $ref: '#/components/schemas/Commodity'
+        facilityType:
+          $ref: '#/components/schemas/FacilityType'
+        eic:
+          description: This field identifies the affected unit by its EIC code. It includes the EIC W code of the unit that is unavailable.
+          type: string
+          example: 11WD7LUDW5GSDG1Q
+        commercialisation:
+          description: The field provides information on whether the electricity generated is used for marketing.
+          type: string
+          example: false
+        shareholders:
+          type: array
+          items:
+            $ref: '#/components/schemas/Shareholder'
+          xml:
+            wrapped: true
+        reportingStart:
+          description: This field gives information on the start of disclosing information on EEX Transparency Platform. This does not necessarily have to correspond to the commissioning of the unit.
+          type: string
+          format: date-time
+          example: "2011-11-01T23:00:00Z"
+        reportingEnd:
+          description: This field gives information on the end of disclosing information on EEX Transparency Platform. This does not necessarily have to correspond to the decommissioning of the unit.
+          type: string
+          format: date-time
+          example: "2025-12-30T23:00:00Z"
+        modified:
+          type: string
+          format: date-time
+          example: "2020-08-25T11:27:21Z"
+        published:
+          type: string
+          format: date-time
+          example: "2020-08-25T11:27:21Z"
+      xml:
+        name: unit
+    
+    UnitFull:
+      allOf:
+        - $ref: '#/components/schemas/Unit'
+        - type: object
+          properties:
+            capacities:
+              type: array
+              items:
+                $ref: '#/components/schemas/Capacity'
+              xml:
+                wrapped: true
+      xml:
+        name: unit
+    
+    Facility:
+      description: The facility information is used for publication of information regarding to generation, storage, consumption and transmission facilities.
+      type: object
+      properties:
+        facilityID:
+          $ref: '#/components/schemas/FacilityID'
+        facilityName:
+          description: The official name of the generation or production facility, consumption facility, transmission, or other gas/electricity asset.
+          type: string
+          example: BASF SE Ludwigshafen
+        biddingZone: # Power only
+          description: The field biddingZone provides the identification of the bidding zone(s) where the affected asset or unit is located using the EIC Y coding schema on the areas for inter System Operator data interchange.
+          type: string
+          example: 10Y1001A1001A82H
+        balancingZone: # Gas only
+          description: The field ‘Balancing Zone’ provides the identification of the balancing zone(s) where the affected asset or unit is located using the EIC Y coding schema for the areas.
+          type: string
+          example: 21Y000000000009E
+        latitude:
+          description: This indicates the latitude at which the facility is located.
+          type: number
+          format: double
+          example: 49.514011
+        longitude:
+          description: This indicates the longitude at which the facility is located.
+          type: number
+          format: double
+          example: 8.431412
+        area:
+          $ref: '#/components/schemas/Area'
+        modified:
+          type: string
+          format: date-time
+          example: "2018-10-01T05:56:18Z"
+        published:
+          type: string
+          format: date-time
+          example: "2018-10-01T05:56:18Z"
+      xml:
+        name: facility
+    
+    FacilityFull:
+      allOf:
+        - $ref: '#/components/schemas/Facility'
+        - type: object
+          properties:
+            units:
+              type: array
+              items:
+                $ref: '#/components/schemas/UnitFull'
+              xml:
+                wrapped: true
+      xml:
+        name: facility
+    
+    Company:
+      description: The company information is used for publication of company related information.
+      type: object
+      properties:
+        companyID:
+          $ref: '#/components/schemas/CompanyID'
+        companyName:
+          description: This is the official legal name of the company reporting. It identifies the market participant responsible for public disclosure.
+          type: string
+          example: BASF SE Ludwigshafen
+        companyCountry:
+          description: The country in which the reporting company is based.
+          type: string
+          example: DE
+        ace:
+          description: The field ace contains the ACER registration code which the market participant provided while registering in accordance with Article 9 of Regulation (EU) No 1227/2011.
+          type: string
+          example: A0002192G.DE
+        #adhocTicker:
+        #  type: boolean
+        #  example: true
+        modified:
+          type: string
+          format: date-time
+          example: "2023-03-03T13:35:12Z"
+        published:
+          type: string
+          format: date-time
+          example: "2023-03-03T13:35:12Z"
+      xml:
+        name: company
+    
+    CompanyFull:
+      allOf:
+        - $ref: '#/components/schemas/Company'
+        - type: object
+          properties:
+            facilities:
+              type: array
+              items:
+                $ref: '#/components/schemas/FacilityFull'
+              xml:
+                wrapped: true
+              #  name: facilities
+          required:
+            - facilities
+      xml:
+        name: company
+    
+    ####
+    #### Event Data
+    ####
+    
+    Event:
+      description: The non-usability information is used to publish Urgent Market Messages (UMMs) relating to physical assets such as generation, storage, consumption or transmission units.
+      type: object
+      properties:
+        companyID:
+          $ref: '#/components/schemas/CompanyID'
+        companyName:
+          description: This is the official legal name of the company reporting. It identifies the market participant responsible for public disclosure.
+          type: string
+          example: BASF SE Ludwigshafen
+        companyCountry:
+          description: The country in which the reporting company is based.
+          type: string
+          example: DE
+        ace:
+          description: The field ace contains the ACER registration code which the market participant provided while registering in accordance with Article 9 of Regulation (EU) No 1227/2011.
+          type: string
+          example: A00042782.DE
+        facilityID:
+          $ref: '#/components/schemas/FacilityID'
+        facilityName:
+          description: The field facilityName identifies the facility where the event is about to occur/is occurring/occurred using its official name.
+          type: string
+          example: Scholven
+        biddingZone: # Power only
+          description: The field biddingZone provides the identification of the bidding zone(s) where the affected asset or unit is located using the EIC Y coding schema on the areas for inter System Operator data interchange.
+          type: string
+          example: 10Y1001A1001A82H
+        balancingZone: # Gas only
+          description: The field ‘Balancing Zone’ provides the identification of the balancing zone(s) where the affected asset or unit is located using the EIC Y coding schema for the areas.
+          type: string
+          example: 21YBA-EC-------B
+        unitID:
+          $ref: '#/components/schemas/UnitID'
+        unitName:
+          description: The field unitName identifies the specific unit where the event is about to occur/is occurring/occurred using its official name.
+          type: string
+          example: Scholven B
+        area:
+          $ref: '#/components/schemas/Area'
+        controlArea: # Power only
+          description: Only relevant for power units. Indicates the control area to which the corresponding unit is connected.
+          type: string
+          example: Amprion
+        marketArea: # Gas only
+          description: Only relevant for gas units. Indicates the market area to which the corresponding unit is connected.
+          type: string
+          example: 10YDE-RWENET---I
+        fuelType:
+          $ref: '#/components/schemas/FuelType'
+        commodity:
+          $ref: '#/components/schemas/Commodity'
+        facilityType:
+          $ref: '#/components/schemas/FacilityType'
+        eic:
+          description: This field identifies the affected unit by its EIC code. It includes the EIC W code of the unit that is unavailable.
+          type: string
+          example: 11WD7SCHO1S--B-0
+        shareholders:
+            type: array
+            items:
+              $ref: '#/components/schemas/Shareholder'
+            xml:
+              wrapped: true
+        messageID:
+          description: |
+            The 'messageID' is the unique identifier of an event. This field aims to capture the identifier of the message issued by the market participant or by someone acting on its behalf. UMMs related to the same event may be updated several times before and during the event. Therefore, the field 'messageID' consists of two parts: ‘UMM thread ID’ and ‘Version Number’ separated by the underscore character. 'messageID' = 'UMM thread ID'_'Version Number'.
+          
+            'UMM thread ID' part is the identifier of a series of UMMs reporting on the same event after potential updates. The 'UMM thread ID' remains unchanged even if the UMM is updated. The format of the 'UMM thread ID' consists of two parts. The 'Event ID' (max. 20 charaters incl. leading 0s for the required lenght) and 'Unique ID' per unit (max. 4 digits).
+
+            'Version Number' is the unique identifier of UMM versions in a single UMM thread. It helps to reconstruct the history of prior publications. It consists of a sequential number with 3 numeric characters where 001 stands for the first UMM in a thread, 002 marks the first update,003 the second update and so on.
+            
+            Example:
+            - messageID =         0000000000M12-20664-6#598_002
+              1) UMM thread ID =  0000000000M12-20664-6#598
+                a) Event ID =     0000000000M12-20664-6
+                b) Unique ID =    #598
+              2) Version Number = _002
+          type: string
+          minLength: 29
+          maxLength: 29
+          example: 0000000000M12-20664-6#598_002
+        eventStatus:
+          description: |
+            The field eventStatus allows the distinction between UMMs that contain the most recent information on an event and can still influence trading decisions, and UMMs that are already outdated.
+            
+            - 'Active' refers to a UMM that contains the most recent update on an event that will occur in the future or is occurring.
+            - 'Dismissed' refers to a UMM that is not valid anymore due to the fact that it was cancelled.
+          type: string
+          example: Active
+        eventType:
+          description: Event type
+          type: string
+          example: Production unavailability
+        unavailabilityType:
+          description: |
+            The field unavailabilityType indicates whether the unavailability was planned or unplanned.
+            - Planned: means a programmed change in capacity (for example a maintenance, seasonal closing, etc.)
+            - Unplanned: means a notprogramed change in capacity (for example an outage, forced limitation).
+          type: string
+          example: Planned
+        eventStart:
+          description: The field eventStart describes the estimated/actual starting time and date of the relevant event.
+          type: string
+          format: date-time
+          example: "2024-01-19T10:00:00Z"
+        eventStop:
+          description: The field eventStop describes the estimated/actual ending time and date of the relevant event.
+          type: string
+          format: date-time
+          example: "2024-02-18T20:15:00Z"
+        capacity:
+          type: object
+          properties:
+            unitMeasure:
+              $ref: '#/components/schemas/unitMeasure'
+            installedCapacity:
+              description: |
+                The field installedCapacity measures the nominal generating/transmission/consumption capacity.
+                It is the maximum electrical active power/ energy interchange the facility can produce/transmit/consume continuously throughout a long period of operation in normal conditions, under relevant security standards.
+              type: number
+              format: double
+              example: 345.0
+            workingCapacity:
+              description: WorkingCapacity
+              type: number
+              format: double
+              example: 305.0
+            capacityIntervals:
+              type: array
+              items:
+                type: object
+                properties:
+                  availableCapacity:
+                    description: The field availableCapacity measures the capacity of the unit concerned that will not be affected by the event, i.e. the capacity that will remain available.
+                    type: number
+                    format: double
+                    example: 140.0
+                  unavailableCapacity:
+                    description: The field unavailableCapacity measures the capacity of the unit concerned that is affected by the event, i.e. the capacity that will be unavailable due to the event.
+                    type: number
+                    format: double
+                    example: 205.0
+                  intervalStart:
+                    description: |
+                      If the available/unavailable capacity fluctuates over time, information on the time interval (interval start and stop) and available/unavailable capacity should be reported via Data Field intervalStart and Data Field intervalStop.
+                      If the available/unavailable capacity is constant, over time, the value in intervalStart is the same as eventStart and the value in intervalStop is the same as the one in eventStop.
+                    type: string
+                    format: date-time
+                    example: "2024-01-19T10:00:00Z"
+                  intervalStop:
+                    description: The field intervalStop describes the estimated (if future) or actual (if past) time and date at which the relevant interval of the event stops or stopped. This field together with the intervalStart field provides the timeframe of the interval of the event.
+                    type: string
+                    format: date-time
+                    example: "2024-01-19T10:15:00Z"
+                required:
+                  - available
+                  - nonAvailable
+                xml:
+                    name: capacityInterval
+        remarks:
+          description: The field remarks provides more detailed information on the event that allows a full understanding of its potential impact on wholesale energy prices.
+          type: string
+          example: Annual maintenance and service work
+        direction: # Only relevant for events with parameters commodity=gas & facilityType=Producer or Transmission)
+          description: This field indicates whether the outage occurs in the entry or exit direction in relation to the specified balancing zone of a gas transmission or production unit.
+          type: string
+          example: Entry
+        unavailabilityReason:
+          description: The field unavailabilityReason provides an explanation on the cause(s) of the unavailability.
+          type: string
+          example: Maintenance
+        reported:
+          description: The date and time when the initial version of the UMM (messageID=*_001) was processed by the system.
+          type: string
+          format: date-time
+          example: "2024-01-30T13:34:03Z"
+        modified:
+          description: The date and time when the UMM was processed by the system.
+          type: string
+          format: date-time
+          example: "2024-02-05T14:46:01Z"
+        published:
+          description: The date and time when the UMM was made publicly available.
+          type: string
+          format: date-time
+          example: "2024-02-05T14:46:16Z"
+      xml:
+        name: event
+    
+    AdHocEvent:
+      description: The ad hoc messages are used when market participants publish UMMs that do not directly relate to physical assets. Typically these are events that are likely to significantly affect wholesale energy prices but are less structured and less frequent by nature than unavailability of facilities (e.g. reporting corporate or market developments, commissioning a new power plant etc.).
+      type: object
+      properties:
+        companyID:
+          $ref: '#/components/schemas/CompanyID'
+        companyName:
+          description: This is the official legal name of the company reporting. It identifies the market participant responsible for public disclosure.
+          type: string
+          example: Centrica Business Solutions Belgium NV
+        companyCountry:
+          description: The country in which the reporting company is based.
+          type: string
+          example: BE
+        ace:
+          description: The field ace contains the ACER registration code which the market participant provided while registering in accordance with Article 9 of Regulation (EU) No 1227/2011.
+          type: string
+          example: A00042782.DE
+        messageID:
+          description: |
+            The 'messageID' is the unique identifier of an event. This field aims to capture the identifier of the message issued by the market participant or by someone acting on its behalf. UMMs related to the same event may be updated several times before and during the event. Therefore, the field 'messageID' consists of two parts: ‘UMM thread ID’ and ‘Version Number’ separated by the underscore character. 'messageID' = 'UMM thread ID'_'Version Number'.
+          
+            'UMM thread ID' part is the identifier of a series of UMMs reporting on the same event after potential updates. The 'UMM thread ID' remains unchanged even if the UMM is updated. The format of the 'UMM thread ID' consists of two parts. The 'Event ID' (max. 20 charaters incl. leading 0s for the required lenght) and 'Unique ID' per unit (max. 4 digits).
+
+            'Version Number' is the unique identifier of UMM versions in a single UMM thread. It helps to reconstruct the history of prior publications. It consists of a sequential number with 3 numeric characters where 001 stands for the first UMM in a thread, 002 marks the first update,003 the second update and so on.
+            
+            Example:
+            - messageID =         0000000000M12-20664-6#598_002
+              1) UMM thread ID =  0000000000M12-20664-6#598
+                a) Event ID =     0000000000M12-20664-6
+                b) Unique ID =    #598
+              2) Version Number = _002
+          type: string
+          example: 00000000000000002564#3662_002
+        eventStatus:
+          description: |
+            The field eventStatus allows the distinction between UMMs that contain the most recent information on an event and can still influence trading decisions, and UMMs that are already outdated.
+            
+            - 'Active' refers to a UMM that contains the most recent update on an event that will occur in the future or is occurring.
+            - 'Dismissed' refers to a UMM that is not valid anymore due to the fact that it was cancelled.
+          type: string
+          example: Active
+        adhocType:
+          description: |
+            By default, an ad-hoc message is sent with the 'Simple'. There are additional types e.g. to explicitly disclose information with regards to the Marekt Abuse Regulation (MAR), grid loss (TSO), balancing market activities (Balancing) or technical status messages (TSM).
+            Currently supported values are:
+            - Simple
+            - MAR
+            - TSO
+            - Balancing
+            - TSM
+          type: string
+          example: Simple
+        eventStart:
+          description: The field eventStart describes the estimated/actual starting time and date of the relevant event.
+          type: string
+          format: date-time
+          example: "2024-02-05T23:00:00Z"
+        eventStop:
+          description: The field eventStop describes the estimated/actual ending time and date of the relevant event.
+          type: string
+          format: date-time
+          example: "2024-02-06T03:00:00Z"
+        remarks:
+          description: The field remarks provides more detailed information on the event that allows a full understanding of its potential impact on wholesale energy prices.
+          type: string
+          example: Reduced availability of components
+        reported:
+          description: The date and time when the initial version of the UMM (messageID=*_001) was processed by the system.
+          type: string
+          format: date-time
+          example: "2024-02-04T19:28:35Z"
+        modified:
+          description: The date and time when the UMM was processed by the system.
+          type: string
+          format: date-time
+          example: "2024-02-05T08:21:25Z"
+        published:
+          description: The date and time when the UMM was made publicly available.
+          type: string
+          format: date-time
+          example: "2024-02-05T08:21:26Z"
+      xml:
+        name: event
+    
+    ####
+    #### Timeseries Data
+    ####
+    
+    TimeSeries:
+      description: The series endpoint is used to distribute time series data that is reported directly by market participants and then aggregated by the platform.
+      type: object
+      properties:
+        symbol:
+          $ref: '#/components/schemas/Symbol'
+        commodity:
+          $ref: '#/components/schemas/Commodity'
+        facilityType:
+          $ref: '#/components/schemas/FacilityType'
+        fuelType:
+          $ref: '#/components/schemas/FuelType'
+        area:
+          $ref: '#/components/schemas/Area'
+        controlArea: # Power only
+          description: This is only relevant for power. It indicates the control area to which the corresponding data set relates.
+          type: string
+          example: 10YDE-RWENET---I
+        marketArea: # Gas only
+          description: This is only relevant for gas. It indicates the market area to which the corresponding data set relates.
+          type: string
+          example: 21Y000000000009E
+        timeResolution:
+          description: |
+            The time resolution is the time interval between two consecutive data points.
+            Currently supported values are:
+            - FifteenMinutes
+            - Hourly
+            - Daily
+            - Weekly
+            - Monthly
+            - Yearly
+          type: string
+          example: FifteenMinutes
+        unitMeasure:
+          $ref: '#/components/schemas/unitMeasure'
+        unitID:
+          $ref: '#/components/schemas/UnitID'
+        series:
+          description: The series comprises consecutive time intervals of the data set.
+          type: array
+          items:
+            type: object
+            properties:
+              timeStamp:
+                description: This shows the date and time when the corresponding value is valid.
+                type: string
+                format: date-time
+                example: "2024-02-03T23:00:00Z"
+              value:
+                description: This value provides information on the quantity of the given dataset.
+                type: number
+                format: double
+                example: 10.0
+              modified:
+                description: The date and time when the value was updated.
+                type: string
+                format: date-time
+                example: "2024-02-03T23:16:53Z"
+            required:
+              - timeStamp
+              - value
+              - modified
+            xml:
+              name: item
+          xml:
+            wrapped: true
+            name: items
+        modified: # = max(series.modified)
+          type: string
+          format: date-time
+          example: "2024-02-03T23:00:00Z"
+        published:
+          description: The date and time when the time series data was made publicly available.
+          type: string
+          format: date-time
+          example: "2024-02-03T23:16:53Z"
+      xml:
+        name: series
+    
+    ####
+    #### Responses
+    ####
+
+    CommoditiesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Commodity'
+      xml:
+        wrapped: true
+        name: commodities
+
+    AreasResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Area'
+      xml:
+        wrapped: true
+        name: areas
+    
+    ValidityDatesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ValidityDate'
+      xml:
+        wrapped: true
+        name: validityDates
+
+    CompanyFullsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CompanyFull'
+      xml:
+        wrapped: true
+        name: companies
+    
+    CompaniesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Company'
+      xml:
+        wrapped: true
+        name: companies
+    
+    FacilitiesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Facility'
+      xml:
+        wrapped: true
+        name: facilities
+    
+    UnitsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Unit'
+      xml:
+        wrapped: true
+        name: units
+    
+    CapacitiesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Capacity'
+      xml:
+        wrapped: true
+        name: capacities
+    
+    EventsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Event'
+      xml:
+        wrapped: true
+        name: events
+    
+    AdHocEventsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/AdHocEvent'
+      xml:
+        wrapped: true
+        name: events
+    
+    TimeSeriesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/TimeSeries'
+      xml:
+        wrapped: true
+        name: series
+  
+  parameters:
+    CompanyID:
+      description: The companyID is the unique identifier of the reporting company.
+      in: path
+      name: companyID
+      required: true
+      schema:
+        $ref: '#/components/schemas/CompanyID'
+    
+    FacilityID:
+      description: The facilityID is the unique identifier of the facility.
+      in: path
+      name: facilityID
+      required: true
+      schema:
+        $ref: '#/components/schemas/FacilityID'
+    
+    UnitID:
+      description: The unitID is the unique identifier of the unit.
+      in: path
+      name: unitID
+      required: true
+      schema:
+        $ref: '#/components/schemas/UnitID'
+    
+    Commodity:
+      description: |
+        The classification of the energy commodity.
+        Currently supported values are:
+        - POWER
+        - NATGAS
+        - OTHER
+      in: path
+      name: commodity
+      required: true
+      schema:
+        $ref: '#/components/schemas/Commodity'
+    
+    FacilityType:
+      description: The facility type provides information if the data relates to a generation, storage, consumption, or transmission facility.
+      in: path
+      name: facilityType
+      required: true
+      schema:
+        $ref: '#/components/schemas/FacilityType'
+    
+    Symbol:
+      description: |
+        The symbol information specifies the data type of the time series.
+        
+        Power Generation:
+        - ActualInstalledCapacitySource
+        - AvailableCapacity
+        - AvailableCapacityHourly
+        - NonUsableCapacity
+        - NonUsableCapacityHourly
+        - ForecastGenerationFuelTypeHourly
+        - ForecastGenerationFuelType15min
+        - ActualGenerationFuelTypeHourly
+        - ActualGenerationFuelType15min
+        - ActualGenerationUnitHourly
+        - ActualGenerationUnit15min
+        - ForecastRenewableGenerationTSO15min
+        - ActualRenewableGeneration15min
+        
+        EuroWind Renewables:
+        - ForecastRenewableGenerationEW15min
+        - ActualRenewableGenerationEW15min
+        
+        Power Storage:
+        - ActualPumpingCapacityCountry
+        - ActualWorkingCapacityCountry
+        - FillingLevel
+        
+        Power Consumption:
+        - ActualPowerConsumptionCapacityCountry
+        - ForecastPowerConsumptionCountryHourly
+        - ActualPowerConsumptionCountryHourly
+        
+        Gas Consumption:
+        - ActualGasConsumptionCapacityCountry
+        - ForecastGasConsumptionCountry
+        - ActualGasConsumptionCountry
+      in: path
+      name: symbol
+      required: true
+      schema:
+        $ref: '#/components/schemas/Symbol'
+
+    Area:
+      description: |
+        The Area is a geographically defined country code (ISO 3166-1 alpha-2).
+        Currently supported values are:
+        - AT
+        - BE
+        - BG
+        - CH
+        - CZ
+        - DE
+        - DK
+        - EE
+        - ES
+        - FI
+        - FR
+        - GB
+        - GR
+        - HR
+        - HU
+        - IE
+        - IT
+        - IS
+        - MD
+        - ME
+        - MK
+        - NO
+        - LV
+        - LT
+        - NL
+        - PL
+        - PT
+        - RO
+        - SE
+        - SI
+        - SK
+        - UA
+      in: path
+      name: area
+      required: true
+      schema:
+        $ref: '#/components/schemas/Area'
+    
+    ModifiedFrom:
+      description: The 'modifiedFrom' refers to the date and time on which the data was distributed.
+      in: path
+      name: modifiedFrom
+      required: true
+      schema:
+        $ref: '#/components/schemas/ModifiedDate'
+    
+    ValidityDate:
+      description: The 'validityDate' refers to the date on which the data was distributed.
+      in: path
+      name: validityDate
+      required: true
+      schema:
+        $ref: '#/components/schemas/ValidityDate'
+    
+    From:
+      description: Interval start time stamp
+      in: path
+      name: from
+      required: true
+      schema:
+        type: string
+        format: date-time
+        example: "2024-11-24T22:00:30Z"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  
+  responses:
+    BadRequest:
+      description: "Bad Request: The request contains invalid parameters or data."
+    
+    UnauthenticatedError:
+      description: "Unauthorised: Authentication failed. User needs to check the required permissions."
+    
+    ForbiddenError:
+      description: "Forbidden: Access denied. User does not possess the required permissions to access this resource."
+
+    NotFoundError:
+      description: "Not Found: The requested resource could not be found. This may be due to a typo in the URL or an attempt to access a non-existent endpoint."
+
+    RequestLimitReached:
+      description: "Access Denied: Number of requests has exceeded the defined limit."
+    
+    InternalServerError:
+      description: "Internal Server Error: An unexpected server error occurred. Please try again later or contact support if the issue persists."
+    
+    ServiceUnavailableError:
+      description: "The requested service is temporarily unavailable. This could be due to server maintenance or high traffic. Please try again later."
+    
+    NotAcceptableError:
+      description: "The 'limit' parameter is invalid. Please ensure it is an integer between 1 and 60000."
+
+
+paths:
+  /rd/transparency/:
+    description: All available commodities.
+    get:
+      summary: Returns all available commodities.
+      description: Returns all available commodities.
+      operationId: getCommodities
+      tags:
+        - ReferenceData for Transparency
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommoditiesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CommoditiesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /rd/transparency/{commodity}/:
+    description: Returns all available areas.
+    get:
+      summary: Returns all areas for a specified commodity.
+      description: Returns all areas for a specified commodity.
+      operationId: getAreas
+      tags:
+        - ReferenceData for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AreasResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AreasResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /rd/transparency/{commodity}/{area}/:
+    description: All available validity dates
+    get:
+      summary: Returns all validity dates for a specified commodity and area.
+      description: Returns all validity dates for a specified commodity and area.
+      operationId: getValidityDates
+      tags:
+        - ReferenceData for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidityDatesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ValidityDatesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /rd/transparency/{commodity}/{area}/{validityDate}:
+    get:
+      description: This endpoint includes complete reference data including company, facility, unit and capacity information for the given commodity and area.
+      operationId: getMasterData
+      tags:
+        - ReferenceData for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ValidityDate'
+        
+        - name: onlyModified
+          description: The 'onlyModified' parameter allows users to query only the modified reference data. If this parameter is set to true, only modified data is returned (i.e. always full company records).
+          in: query
+          required: false
+          schema:
+            type: boolean
+            example: true
+        
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyFullsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CompanyFullsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /rd/transparency/{commodity}/{area}/{validityDate}/:
+    get:
+      description: This endpoint includes all reference data at company level for a given commodity and area only, with no further structure (e.g. facilities, units or capacities).
+      operationId: getCompanies
+      tags:
+        - ReferenceData for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ValidityDate'
+        
+        - name: onlyModified
+          description: The 'onlyModified' parameter allows users to query only the modified reference data. If this parameter is set to true, only modified data is returned (i.e. always full company records).
+          in: query
+          required: false
+          schema:
+            type: boolean
+            example: true
+        
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompaniesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CompaniesResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /rd/transparency/{commodity}/{area}/{validityDate}/{companyID}:
+    get:
+      description: This endpoint includes all reference data, including company, facility, unit and capacity information for a given commodity, area and companyID.
+      operationId: getCompany
+      tags:
+        - ReferenceData for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ValidityDate'
+        - $ref: '#/components/parameters/CompanyID'
+        
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+    
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyFull'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CompanyFull'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /rd/transparency/{commodity}/{area}/{validityDate}/{companyID}/:
+    get:
+      description: This endpoint includes all reference data at facility level for a given commodity, area and companyID only, with no further structure (e.g. units or capacities).
+      operationId: getFacilities
+      tags:
+        - ReferenceData for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ValidityDate'
+        - $ref: '#/components/parameters/CompanyID'
+        
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilitiesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/FacilitiesResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /rd/transparency/{commodity}/{area}/{validityDate}/{companyID}/{facilityID}:
+    get:
+      description: This endpoint includes all reference data, including facility, unit and capacity information for a given commodity, area, companyID and facilityID.
+      operationId: getFacility
+      tags:
+        - ReferenceData for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ValidityDate'
+        - $ref: '#/components/parameters/CompanyID'
+        - $ref: '#/components/parameters/FacilityID'
+        
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityFull'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/FacilityFull'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /rd/transparency/{commodity}/{area}/{validityDate}/{companyID}/{facilityID}/:
+    get:
+      description: This endpoint includes reference data at unit level for a given commodity, area, companyID and facilityID only, with no further structure (e.g. capacities).
+      operationId: getUnits
+      tags:
+        - ReferenceData for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ValidityDate'
+        - $ref: '#/components/parameters/CompanyID'
+        - $ref: '#/components/parameters/FacilityID'
+        
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/UnitsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  /rd/transparency/{commodity}/{area}/{validityDate}/{companyID}/{facilityID}/{unitID}:
+    get:
+      description: This endpoint includes reference data including unit and capacity information for a given commodity, area, companyID, facilityID and unitID.
+      operationId: getUnit
+      tags:
+        - ReferenceData for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ValidityDate'
+        - $ref: '#/components/parameters/CompanyID'
+        - $ref: '#/components/parameters/FacilityID'
+        - $ref: '#/components/parameters/UnitID'
+        
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitFull'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/UnitFull'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+        
+  /rd/transparency/{commodity}/{area}/{validityDate}/{companyID}/{facilityID}/{unitID}/:
+    get:
+      description: This endpoint only includes reference data at capacity level for a given commodity, area, companyID, facilityID and unitID.
+      operationId: getCapacities
+      tags:
+        - ReferenceData for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/ValidityDate'
+        - $ref: '#/components/parameters/CompanyID'
+        - $ref: '#/components/parameters/FacilityID'
+        - $ref: '#/components/parameters/UnitID'
+        
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapacitiesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CapacitiesResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  ####
+  #### Event data
+  ####
+  # Use case: The user is interested in newly arrived UMM data for a certain commodity and area.
+  /umm/transparency/{commodity}/{area}/{facilityType}/{modifiedFrom}:
+    get:
+      description: |
+        This endpoint includes newly arrived data on Urgent Market Messages (UMM) for power and gas units.
+        
+      operationId: getUrgentMarketMessages
+      tags:
+        - Urgent Market Messages for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/FacilityType'
+        - $ref: '#/components/parameters/ModifiedFrom'
+        
+        - name: modifiedTo
+          description: The 'modifiedTo' parameter restrict the search for the given interval in which the data was distributed to a maximum of one year.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        
+        - name: eventStart
+          description: The 'eventStart' parameter refers to the date and time on which the UMM started.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        
+        - name: eventStop
+          description: The 'eventStop' parameter restrict the search for the given interval in which the UMM was valid to a maximum of one year.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        
+        - name: eventStatus
+          description: |
+            The 'eventStatus' parameter restrict the search for active or dismissed UMMs:
+            - Active
+            - Dismissed
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Active
+        
+        - name: companyID
+          description: The companyID is the unique identifier of the reporting company.
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CompanyID'
+        
+        - name: facilityID
+          description: The facilityID is the unique identifier of the facility.
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/FacilityID'
+        
+        - name: unitID
+          description: The unitID is the unique identifier of the unit.
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UnitID'
+        
+        - name: controlArea
+          description: |
+            The field 'controlArea' indicates the control area to which the corresponding unit is connected.
+            The following values are supported:
+            - TenneT (DE)
+            - TransnetBW
+            - Amprion
+            - 50Hertz
+            - APG
+            - CEPS
+            - SwissGrid
+            - Elia
+            - TenneT (NL)
+            - MAVIR
+            - National Grid
+            - PSE
+            - Terna
+            - REE
+            - RTE
+            - Transelectrica
+            - EirGrid
+            - Energinet
+            - DK2
+            - IPTO
+            - Svenska Kraftnät
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Amprion
+            
+        - name: marketArea
+          description: |
+            The field 'marketArea' indicates the market area to which the corresponding unit is connected.
+            The following values are supported:
+            - CEGH
+            - PSV IT
+            - VOB
+            - TTF
+            - THE
+            - VTP-FI
+            - FINLAND_GAS_BALZ
+            - GAS_SYS_ESTONIA
+            - BALTIC-BAL
+            - VTP-LT
+            - VTP-DK
+            - VTP Greece
+            - Gaspool
+            - NCG
+          in: query
+          required: false
+          schema:
+            type: string
+            example: THE
+            
+        - name: fuelType
+          description:  |
+            The field fuelType gives additional information on the source of energy used by the production or generation unit concerned.
+            This field is only relevant for power generation reference data, time series data and UMMs.
+            Currently supported values are:
+            - Biomass
+            - Fossil Brown coal/Lignite
+            - Fossil Coal-derived gas
+            - Fossil Gas
+            - Fossil Hard coal
+            - Fossil Oil
+            - Fossil Oil shale
+            - Fossil Peat
+            - Geothermal
+            - Hydro Pumped Storage
+            - Hydro Run-of-river and poundage
+            - Hydro Water Reservoir
+            - Marine
+            - Nuclear
+            - Other renewable
+            - Solar
+            - Waste
+            - Wind Offshore
+            - Wind Onshore
+            - Other
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/FuelType'
+        
+        - name: unavailabilityType
+          description: |
+            The field unavailabilityType indicates whether the unavailability was planned or unplanned.
+            - Planned: means a programmed change in capacity (for example a maintenance, seasonal closing, etc.)
+            - Unplanned: means a notprogramed change in capacity (for example an outage, forced limitation).
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Planned
+        
+        - name: messageID
+          description: |
+            The 'messageID' is the unique identifier of an event. This field aims to capture the identifier of the message issued by the market participant or by someone acting on its behalf. UMMs related to the same event may be updated several times before and during the event. Therefore, the field 'messageID' consists of two parts: ‘UMM thread ID’ and ‘Version Number’ separated by the underscore character. 'messageID' = 'UMM thread ID'_'Version Number'.
+
+            'UMM thread ID' part is the identifier of a series of UMMs reporting on the same event after potential updates. The 'UMM thread ID' remains unchanged even if the UMM is updated. The format of the 'UMM thread ID' consists of two parts. The 'Event ID' (max. 20 charaters incl. leading 0s for the required lenght) and 'Unique ID' per unit (max. 4 digits).
+
+            'Version Number' is the unique identifier of UMM versions in a single UMM thread. It helps to reconstruct the history of prior publications. It consists of a sequential number with 3 numeric characters where 001 stands for the first UMM in a thread, 002 marks the first update,003 the second update and so on.
+            
+            Example:
+            - messageID =         0000000000M12-20664-6#598_002
+              1) UMM thread ID =  0000000000M12-20664-6#598
+                a) Event ID =     0000000000M12-20664-6
+                b) Unique ID =    #598
+              2) Version Number = _002
+          in: query
+          required: false
+          schema:
+            type: string
+            example: 0000000000M12-20664-6#598_002
+         
+        - name: unavailabilityReason
+          description: |
+            The 'unavailabilityReason' parameter restrict the search for UMMs on the cause of the unavailability.
+            - Outage
+            - Maintenance
+            - External factors
+            - Other
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Outage
+        
+        - name: minOutage
+          description: |
+            The 'minOutage' parameter restrict the search for UMMs with a minimum unavailbale capacity.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            example: 100
+        
+        - name: limit
+          description: By default, the response is limited to 1000 records. The 'limit' parameter allows you to change this limit. In the API preview interface, an example value of 10 is shown to keep responses small, as the preview is not intended for large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1000
+            minimum: 1
+            maximum: 60000
+            example: 10
+       
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+        
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/EventsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  # Use case: The user is interested in newly arrived UMM data for a certain commodity across all areas and facility types.
+  /umm/transparency/{commodity}/{modifiedFrom}:
+    get:
+      description: |
+        This endpoint includes newly arrived data on Urgent Market Messages (UMM) for power and gas units of the given commodity. UMMs of all areas the user is entitled to and of all facility types are returned.
+        The result is sorted in ascending order by commodity, area, facilityType, modified and messageID.
+        
+      operationId: getUrgentMarketMessagesByCommodity
+      tags:
+        - Urgent Market Messages for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/ModifiedFrom'
+        
+        - name: modifiedTo
+          description: The 'modifiedTo' parameter restrict the search for the given interval in which the data was distributed to a maximum of one year.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        
+        - name: eventStart
+          description: The 'eventStart' parameter refers to the date and time on which the UMM started.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        
+        - name: eventStop
+          description: The 'eventStop' parameter restrict the search for the given interval in which the UMM was valid to a maximum of one year.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        
+        - name: eventStatus
+          description: |
+            The 'eventStatus' parameter restrict the search for active or dismissed UMMs:
+            - Active
+            - Dismissed
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Active
+        
+        - name: companyID
+          description: The companyID is the unique identifier of the reporting company.
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CompanyID'
+        
+        - name: facilityID
+          description: The facilityID is the unique identifier of the facility.
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/FacilityID'
+        
+        - name: unitID
+          description: The unitID is the unique identifier of the unit.
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UnitID'
+        
+        - name: controlArea
+          description: |
+            The field 'controlArea' indicates the control area to which the corresponding unit is connected.
+            The following values are supported:
+            - TenneT (DE)
+            - TransnetBW
+            - Amprion
+            - 50Hertz
+            - APG
+            - CEPS
+            - SwissGrid
+            - Elia
+            - TenneT (NL)
+            - MAVIR
+            - National Grid
+            - PSE
+            - Terna
+            - REE
+            - RTE
+            - Transelectrica
+            - EirGrid
+            - Energinet
+            - DK2
+            - IPTO
+            - Svenska Kraftnät
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Amprion
+            
+        - name: marketArea
+          description: |
+            The field 'marketArea' indicates the market area to which the corresponding unit is connected.
+            The following values are supported:
+            - CEGH
+            - PSV IT
+            - VOB
+            - TTF
+            - THE
+            - VTP-FI
+            - FINLAND_GAS_BALZ
+            - GAS_SYS_ESTONIA
+            - BALTIC-BAL
+            - VTP-LT
+            - VTP-DK
+            - VTP Greece
+            - Gaspool
+            - NCG
+          in: query
+          required: false
+          schema:
+            type: string
+            example: THE
+            
+        - name: fuelType
+          description:  |
+            The field fuelType gives additional information on the source of energy used by the production or generation unit concerned.
+            This field is only relevant for power generation reference data, time series data and UMMs.
+            Currently supported values are:
+            - Biomass
+            - Fossil Brown coal/Lignite
+            - Fossil Coal-derived gas
+            - Fossil Gas
+            - Fossil Hard coal
+            - Fossil Oil
+            - Fossil Oil shale
+            - Fossil Peat
+            - Geothermal
+            - Hydro Pumped Storage
+            - Hydro Run-of-river and poundage
+            - Hydro Water Reservoir
+            - Marine
+            - Nuclear
+            - Other renewable
+            - Solar
+            - Waste
+            - Wind Offshore
+            - Wind Onshore
+            - Other
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/FuelType'
+        
+        - name: unavailabilityType
+          description: |
+            The field unavailabilityType indicates whether the unavailability was planned or unplanned.
+            - Planned: means a programmed change in capacity (for example a maintenance, seasonal closing, etc.)
+            - Unplanned: means a notprogramed change in capacity (for example an outage, forced limitation).
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Planned
+        
+        - name: messageID
+          description: |
+            The 'messageID' is the unique identifier of an event. This field aims to capture the identifier of the message issued by the market participant or by someone acting on its behalf. UMMs related to the same event may be updated several times before and during the event. Therefore, the field 'messageID' consists of two parts: ‘UMM thread ID’ and ‘Version Number’ separated by the underscore character. 'messageID' = 'UMM thread ID'_'Version Number'.
+
+            'UMM thread ID' part is the identifier of a series of UMMs reporting on the same event after potential updates. The 'UMM thread ID' remains unchanged even if the UMM is updated. The format of the 'UMM thread ID' consists of two parts. The 'Event ID' (max. 20 charaters incl. leading 0s for the required lenght) and 'Unique ID' per unit (max. 4 digits).
+
+            'Version Number' is the unique identifier of UMM versions in a single UMM thread. It helps to reconstruct the history of prior publications. It consists of a sequential number with 3 numeric characters where 001 stands for the first UMM in a thread, 002 marks the first update,003 the second update and so on.
+            
+            Example:
+            - messageID =         0000000000M12-20664-6#598_002
+              1) UMM thread ID =  0000000000M12-20664-6#598
+                a) Event ID =     0000000000M12-20664-6
+                b) Unique ID =    #598
+              2) Version Number = _002
+          in: query
+          required: false
+          schema:
+            type: string
+            example: 0000000000M12-20664-6#598_002
+         
+        - name: unavailabilityReason
+          description: |
+            The 'unavailabilityReason' parameter restrict the search for UMMs on the cause of the unavailability.
+            - Outage
+            - Maintenance
+            - External factors
+            - Other
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Outage
+        
+        - name: minOutage
+          description: |
+            The 'minOutage' parameter restrict the search for UMMs with a minimum unavailbale capacity.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            example: 100
+        
+        - name: limit
+          description: By default, the response is limited to 1000 records. The 'limit' parameter allows you to change this limit. In the API preview interface, an example value of 10 is shown to keep responses small, as the preview is not intended for large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1000
+            minimum: 1
+            maximum: 60000
+            example: 10
+       
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+        
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/EventsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  # Use case: The user is interested in UMM data for a specific commodity and area within a given timeframe.
+  /umm/transparency/{commodity}/{area}/{facilityType}:
+    get:
+      description: |
+        This endpoint includes data on Urgent Market Messages (UMMs) relating to power and gas units that affect a specified time interval.
+      operationId: getActualUrgentMarketMessages
+      tags:
+        - Urgent Market Messages for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/FacilityType'
+        
+        - name: validityFrom
+          description: The 'validityFrom' parameter refers to the starting of the affected time period.
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        
+        - name: validityTo
+          description: The 'validityTo' parameter restrict the search for the given interval in which the UMM was valid to a maximum of one year.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        
+        - name: eventStatus
+          description: |
+            The 'eventStatus' parameter restrict the search for active or dismissed UMMs:
+            - Active
+            - Dismissed
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Active
+        
+        - name: companyID
+          description: The companyID is the unique identifier of the reporting company.
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CompanyID'
+        
+        - name: facilityID
+          description: The facilityID is the unique identifier of the facility.
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/FacilityID'
+        
+        - name: unitID
+          description: The unitID is the unique identifier of the unit.
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UnitID'
+        
+        - name: controlArea
+          description: |
+            The field 'controlArea' indicates the control area to which the corresponding unit is connected.
+            The following values are supported:
+            - TenneT (DE)
+            - TransnetBW
+            - Amprion
+            - 50Hertz
+            - APG
+            - CEPS
+            - SwissGrid
+            - Elia
+            - TenneT (NL)
+            - MAVIR
+            - National Grid
+            - PSE
+            - Terna
+            - REE
+            - RTE
+            - Transelectrica
+            - EirGrid
+            - Energinet
+            - DK2
+            - IPTO
+            - Svenska Kraftnät
+          in: query
+          required: false
+          schema:
+            type: string
+          example: Amprion
+        
+        - name: marketArea
+          description: |
+            The field 'marketArea' indicates the market area to which the corresponding unit is connected.
+            The following values are supported:
+            - CEGH
+            - PSV IT
+            - VOB
+            - TTF
+            - THE
+            - VTP-FI
+            - FINLAND_GAS_BALZ
+            - GAS_SYS_ESTONIA
+            - BALTIC-BAL
+            - VTP-LT
+            - VTP-DK
+            - VTP Greece
+            - Gaspool
+            - NCG
+          in: query
+          required: false
+          schema:
+            type: string
+          example: THE
+          
+        - name: fuelType
+          description: |
+            The field fuelType gives additional information on the source of energy used by the production or generation unit concerned.
+            This field is only relevant for power generation reference data, time series data and UMMs.
+            Currently supported values are:
+            - Biomass
+            - Fossil Brown coal/Lignite
+            - Fossil Coal-derived gas
+            - Fossil Gas
+            - Fossil Hard coal
+            - Fossil Oil
+            - Fossil Oil shale
+            - Fossil Peat
+            - Geothermal
+            - Hydro Pumped Storage
+            - Hydro Run-of-river and poundage
+            - Hydro Water Reservoir
+            - Marine
+            - Nuclear
+            - Other renewable
+            - Solar
+            - Waste
+            - Wind Offshore
+            - Wind Onshore
+            - Other
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/FuelType'
+        
+        - name: unavailabilityType
+          description: |
+            The field unavailabilityType indicates whether the unavailability was planned or unplanned.
+            - Planned: means a programmed change in capacity (for example a maintenance, seasonal closing, etc.)
+            - Unplanned: means a notprogramed change in capacity (for example an outage, forced limitation).
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Planned
+        
+        - name: messageID
+          description: |
+            The 'messageID' is the unique identifier of an event. This field aims to capture the identifier of the message issued by the market participant or by someone acting on its behalf. UMMs related to the same event may be updated several times before and during the event. Therefore, the field 'messageID' consists of two parts: ‘UMM thread ID’ and ‘Version Number’ separated by the underscore character. 'messageID' = 'UMM thread ID'_'Version Number'.
+
+            'UMM thread ID' part is the identifier of a series of UMMs reporting on the same event after potential updates. The 'UMM thread ID' remains unchanged even if the UMM is updated. The format of the 'UMM thread ID' consists of two parts. The 'Event ID' (max. 20 charaters incl. leading 0s for the required lenght) and 'Unique ID' per unit (max. 4 digits).
+
+            'Version Number' is the unique identifier of UMM versions in a single UMM thread. It helps to reconstruct the history of prior publications. It consists of a sequential number with 3 numeric characters where 001 stands for the first UMM in a thread, 002 marks the first update,003 the second update and so on.
+            
+            Example:
+            - messageID =         0000000000M12-20664-6#598_002
+              1) UMM thread ID =  0000000000M12-20664-6#598
+                a) Event ID =     0000000000M12-20664-6
+                b) Unique ID =    #598
+              2) Version Number = _002
+          in: query
+          required: false
+          schema:
+            type: string
+        
+        - name: unavailabilityReason
+          description: |
+            The 'unavailabilityReason' parameter restrict the search for UMMs on the cause of the unavailability.
+            - Outage
+            - Maintenance
+            - External factors
+            - Other
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Outage
+        
+        - name: minOutage
+          description: |
+            The 'minOutage' parameter restrict the search for UMMs with a minimum unavailbale capacity.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        
+        - name: limit
+          description: By default, the response is limited to 1000 records. The 'limit' parameter allows you to change this limit. In the API preview interface, an example value of 10 is shown to keep responses small, as the preview is not intended for large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1000
+            minimum: 1
+            maximum: 60000
+            example: 10
+      
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/EventsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  
+  #
+  # Adhoc messages
+  #
+  # Use case: The user is interested in newly arrived othger UMM data.
+  /umm/transparency/other/{modifiedFrom}:
+    get:
+      description: |
+        This endpoint includes newly arrived data on Urgent Market Messages (UMM) for “Other market information”. Typically these are events that are likely to significantly affect wholesale energy prices but are less structured and less frequent by nature than unavailability of units (for example: reporting corporate or market developments, commissioning a new power plant etc.).
+        
+      operationId: getAdHocMessages
+      tags:
+        - Urgent Market Messages for Transparency
+      parameters:
+        - $ref: '#/components/parameters/ModifiedFrom'
+        
+        - name: modifiedTo
+          description: The 'modifiedTo' parameter restrict the search for the given interval in which the data was distributed to a maximum of one year.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        
+        - name: companyID
+          description: The companyID is the unique identifier of the reporting company.
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CompanyID'
+        
+        - name: eventStatus
+          description: |
+            The 'status' parameter restrict the search for active or dismissed UMMs:
+            - Active
+            - Dismissed
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Active
+        
+        - name: adhocType
+          description: |
+            By default, an ad-hoc message is sent with the 'Simple'. There are additional types e.g. to explicitly disclose information with regards to the Marekt Abuse Regulation (MAR), grid loss (TSO), balancing market activities (Balancing) or technical status messages (TSM).
+            Currently supported values are:
+            - Simple
+            - MAR
+            - TSO
+            - Balancing
+            - TSM
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple
+        
+        - name: messageID
+          description: |
+            The 'messageID' is the unique identifier of an event. This field aims to capture the identifier of the message issued by the market participant or by someone acting on its behalf. UMMs related to the same event may be updated several times before and during the event. Therefore, the field 'messageID' consists of two parts: ‘UMM thread ID’ and ‘Version Number’ separated by the underscore character. 'messageID' = 'UMM thread ID'_'Version Number'.
+
+            'UMM thread ID' part is the identifier of a series of UMMs reporting on the same event after potential updates. The 'UMM thread ID' remains unchanged even if the UMM is updated. The format of the 'UMM thread ID' consists of two parts. The 'Event ID' (max. 20 charaters incl. leading 0s for the required lenght) and 'Unique ID' per unit (max. 4 digits).
+
+            'Version Number' is the unique identifier of UMM versions in a single UMM thread. It helps to reconstruct the history of prior publications. It consists of a sequential number with 3 numeric characters where 001 stands for the first UMM in a thread, 002 marks the first update,003 the second update and so on.
+            
+            Example:
+            - messageID =         0000000000M12-20664-6#598_002
+              1) UMM thread ID =  0000000000M12-20664-6#598
+                a) Event ID =     0000000000M12-20664-6
+                b) Unique ID =    #598
+              2) Version Number = _002
+          in: query
+          required: false
+          schema:
+            type: string
+         
+        - name: limit
+          description: By default, the response is limited to 1000 records. The 'limit' parameter allows you to change this limit. In the API preview interface, an example value of 10 is shown to keep responses small, as the preview is not intended for large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1000
+            minimum: 1
+            maximum: 60000
+            example: 10
+          
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdHocEventsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AdHocEventsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+
+  # Use case: The user is interested in 'other UMM data within a given timeframe.
+  /umm/transparency/other:
+    get:
+      description: |
+        This endpoint includes data on Urgent Market Messages (UMM) for “Other market information”  that affect a specified time interval. Typically these are events that are likely to significantly affect wholesale energy prices but are less structured and less frequent by nature than unavailability of units (for example: reporting corporate or market developments, commissioning a new power plant etc.).
+      operationId: getActualAdHocMessages
+      tags:
+        - Urgent Market Messages for Transparency
+      parameters:
+        - name: validityFrom
+          description: The 'validityFrom' parameter refers to the starting of the affected time period.
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        
+        - name: validityTo
+          description: The 'validityTo' parameter restrict the search for the given interval in which the UMM was valid to a maximum of one year.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            
+        - name: companyID
+          description: The companyID is the unique identifier of the reporting company.
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CompanyID'
+        
+        - name: eventStatus
+          description: |
+            The 'status' parameter restrict the search for active or dismissed UMMs:
+            - Active
+            - Dismissed
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Active
+        
+        - name: adhocType
+          description: |
+            By default, an ad-hoc message is sent with the 'Simple'. There are additional types e.g. to explicitly disclose information with regards to the Marekt Abuse Regulation (MAR), grid loss (TSO), balancing market activities (Balancing) or technical status messages (TSM).
+            Currently supported values are:
+            - Simple
+            - MAR
+            - TSO
+            - Balancing
+            - TSM
+          in: query
+          required: false
+          schema:
+            type: string
+            example: Simple
+        
+        - name: messageID
+          description: |
+            The 'messageID' is the unique identifier of an event. This field aims to capture the identifier of the message issued by the market participant or by someone acting on its behalf. UMMs related to the same event may be updated several times before and during the event. Therefore, the field 'messageID' consists of two parts: ‘UMM thread ID’ and ‘Version Number’ separated by the underscore character. 'messageID' = 'UMM thread ID'_'Version Number'.
+
+            'UMM thread ID' part is the identifier of a series of UMMs reporting on the same event after potential updates. The 'UMM thread ID' remains unchanged even if the UMM is updated. The format of the 'UMM thread ID' consists of two parts. The 'Event ID' (max. 20 charaters incl. leading 0s for the required lenght) and 'Unique ID' per unit (max. 4 digits).
+
+            'Version Number' is the unique identifier of UMM versions in a single UMM thread. It helps to reconstruct the history of prior publications. It consists of a sequential number with 3 numeric characters where 001 stands for the first UMM in a thread, 002 marks the first update,003 the second update and so on.
+            
+            Example:
+            - messageID =         0000000000M12-20664-6#598_002
+              1) UMM thread ID =  0000000000M12-20664-6#598
+                a) Event ID =     0000000000M12-20664-6
+                b) Unique ID =    #598
+              2) Version Number = _002
+          in: query
+          required: false
+          schema:
+            type: string
+         
+        - name: limit
+          description: By default, the response is limited to 1000 records. The 'limit' parameter allows you to change this limit. In the API preview interface, an example value of 10 is shown to keep responses small, as the preview is not intended for large datasets.
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1000
+            minimum: 1
+            maximum: 60000
+            example: 10
+
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdHocEventsResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AdHocEventsResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/NotAcceptableError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  
+  ####
+  #### Time series data
+  ####
+  /series/transparency/{commodity}/{area}/{symbol}/{from}:
+    get:
+      description: |
+        This endpoint includes time series data from the EEX Transparency Platform for power and gas in a specified area, symbol and time interval.
+      operationId: getTimeSeries
+      tags:
+        - Time Series for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/Symbol'
+        - $ref: '#/components/parameters/From'
+        
+        - name: to
+          description: The 'to' parameter restrict the search for the given interval series to a maximum of one year.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        
+        - name: fuelType
+          description: |
+            The field fuelType gives additional information on the source of energy used by the production or generation unit concerned.
+            This field is only relevant for power generation reference data, time series data and UMMs.
+            Currently supported values are:
+            - Biomass
+            - Fossil Brown coal/Lignite
+            - Fossil Coal-derived gas
+            - Fossil Gas
+            - Fossil Hard coal
+            - Fossil Oil
+            - Fossil Oil shale
+            - Fossil Peat
+            - Geothermal
+            - Hydro Pumped Storage
+            - Hydro Run-of-river and poundage
+            - Hydro Water Reservoir
+            - Marine
+            - Nuclear
+            - Other renewable
+            - Solar
+            - Waste
+            - Wind Offshore
+            - Wind Onshore
+            - Other
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/FuelType'
+        
+        - name: controlArea
+          description: |
+            The field 'controlArea' indicates the control area to which the corresponding unit is connected.
+            The following values are supported:
+            - TenneT (DE)
+            - TransnetBW
+            - Amprion
+            - 50Hertz
+            - APG
+            - CEPS
+            - SwissGrid
+            - Elia
+            - TenneT (NL)
+            - MAVIR
+            - National Grid
+            - PSE
+            - Terna
+            - REE
+            - RTE
+            - Transelectrica
+            - EirGrid
+            - Energinet
+            - DK2
+            - IPTO
+            - Svenska Kraftnät
+          in: query
+          required: false
+          schema:
+            type: string
+            example: TenneT (DE))
+        
+        - name: marketArea
+          description: |
+            The field 'marketArea' indicates the market area to which the corresponding unit is connected.
+            The following values are supported:
+            - CEGH
+            - PSV IT
+            - VOB
+            - TTF
+            - THE
+            - VTP-FI
+            - FINLAND_GAS_BALZ
+            - GAS_SYS_ESTONIA
+            - BALTIC-BAL
+            - VTP-LT
+            - VTP-DK
+            - VTP Greece
+            - Gaspool
+            - NCG
+          in: query
+          required: false
+          schema:
+            type: string
+          example: CEGH
+        
+        - name : unitID
+          description: The unitID is the unique identifier of the unit.
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UnitID'
+        
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["commodity", "area"]
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeSeriesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TimeSeriesResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /series/eurowind/{commodity}/{area}/{symbol}/{from}:
+    get:
+      description: |
+        This endpoint includes time series data on power renewables in a specified area from the third-party vendor EuroWind, for a given symbol and time interval.
+      operationId: getTimeSeriesEW
+      tags:
+        - Time Series for Transparency
+      parameters:
+        - $ref: '#/components/parameters/Commodity'
+        - $ref: '#/components/parameters/Area'
+        - $ref: '#/components/parameters/Symbol'
+        - $ref: '#/components/parameters/From'
+        
+        - name: to
+          description: The 'to' parameter restrict the search for the given interval series to a maximum of one.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        
+        - name: fuelType
+          description: |
+            The field fuelType gives additional information on the source of energy used.
+            Currently supported values are:
+            - Solar
+            - Wind Offshore
+            - Wind Onshore
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/FuelType'
+        
+        - name: controlArea
+          description: |
+            The field 'controlArea' indicates the control area to which the corresponding unit is connected.
+            The following values are supported:
+            - TenneT (DE)
+            - TransnetBW
+            - Amprion
+            - 50Hertz
+            - APG
+            - TenneT (NL)
+            - National Grid
+          in: query
+          required: false
+          schema:
+            type: string
+            example: TenneT (DE))
+        
+        - name: fields
+          in: query
+          required: false
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+              example: ["commodity", "area"]
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeSeriesResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TimeSeriesResponse'
+            text/csv:
+              schema:
+                type: string
+                example: |-
+                  a,b,c
+                  v1,v2,v3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthenticatedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RequestLimitReached'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+  

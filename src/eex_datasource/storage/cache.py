@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def canonical_request_hash(path: str, query: dict[str, Any] | None) -> str:
+    """Hash a JSON GET request without credentials or absent query values."""
     normalized = {
         "method": "GET",
         "path": path,
@@ -59,6 +60,11 @@ class CachedTransport:
         self.last_cache_hit = False
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> Any:
+        """Return fresh archived JSON or fetch/archive a new response.
+
+        ``last_fetch_id`` identifies the response manifest for row provenance.
+        A forced request bypasses freshness checks, not content deduplication.
+        """
         query = {
             key: value for key, value in (params or {}).items() if value is not None
         }
